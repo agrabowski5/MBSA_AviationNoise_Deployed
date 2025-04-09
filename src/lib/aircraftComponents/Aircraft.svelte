@@ -4,6 +4,12 @@
   import { cubicInOut } from 'svelte/easing';
   import { getCompleteRoute, loganAirport } from './AirportRoutes.js';
 
+  // Add these at the top of your script
+  // Function to get the correct base path
+  function getBasePath() {
+    return import.meta.env.BASE_URL || '/';
+  }
+
   export let map;
   export let active = true;
   export let routeName = 'loganToGloucester';
@@ -212,7 +218,8 @@
     el.className = 'aircraft-marker in-flight';
     
     // Use SVG image instead of emoji
-    el.innerHTML = `<div class="aircraft-icon"><img src="/images/Aircraft_PPT.svg" alt="Aircraft" /></div>`;
+    const basePath = getBasePath();
+    el.innerHTML = `<div class="aircraft-icon"><img src="${basePath}images/Aircraft_PPT.svg" alt="Aircraft" /></div>`;
     el.style.position = 'absolute';
     el.style.zIndex = '9999';
     
