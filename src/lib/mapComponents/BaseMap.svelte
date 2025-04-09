@@ -67,8 +67,9 @@
     const overallCenter = [-71.05672511293635, 42.35885643076469]
     const overallZoom = 9
 
-    const baseCenter = [-71.29451, 42.36027];
-    const baseZoom = 10;
+    // Change these coordinates to center on Boston and zoom in closer
+    const baseCenter = [-71.0589, 42.3601]; // Boston city center coordinates
+    const baseZoom = 12; // More zoomed in
 
     onMount(async () => {
         map = new mapboxgl.Map({
