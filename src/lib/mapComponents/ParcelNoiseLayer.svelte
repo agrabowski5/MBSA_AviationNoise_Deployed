@@ -25,8 +25,8 @@
     let directoryMap = null;
     let currentBatchIndex = 0;
     const BATCH_SIZE = 3; 
-    const DELAY_BETWEEN_TOWNS = 10; 
-    const DELAY_BETWEEN_BATCHES = 20; 
+    const DELAY_BETWEEN_TOWNS = 0; 
+    const DELAY_BETWEEN_BATCHES = 0; 
 
     let hasSelectedParcels = false;
 
@@ -42,6 +42,15 @@
             
             if (response.ok) {
                 const data = await response.json();
+                
+                // Filter out any No_Data features if they exist
+                if (data.features) {
+                    data.features = data.features.filter(feature => {
+                        // Check if this is from a No_Data file (you might need to adjust this condition)
+                        const props = feature.properties || {};
+                        return !(props.sourceFile && props.sourceFile.startsWith('No_Data'));
+                    });
+                }
                 
                 map.addSource('simplified-noise', {
                     type: 'geojson',
