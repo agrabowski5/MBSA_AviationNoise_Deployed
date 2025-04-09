@@ -696,6 +696,9 @@ function setupParcelClickHandler() {
     });
 </script>
 
+<!-- Add this title element at the top of your component, before any existing HTML -->
+<div class="page-title">Aviation Noise's Effect on Housing</div>
+
 <div class="legend">
     <h3>Noise Impact Levels</h3>
     <div class="legend-item">
@@ -734,6 +737,30 @@ function setupParcelClickHandler() {
 </div>
 
 <style>
+    /* Add this CSS for the title */
+    .page-title {
+        position: absolute;
+        top: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(50, 50, 50, 0.85);
+        color: white;
+        padding: 8px 20px;
+        border-radius: 5px;
+        font-size: 18px;
+        font-weight: 600;
+        font-family: Arial, sans-serif;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        z-index: 100;
+        border: 1px solid #555;
+        text-align: center;
+        pointer-events: none; /* Makes it non-invasive by not blocking map interactions */
+        max-width: 80%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
     .loading-status {
         position: fixed;
         top: 20px;
