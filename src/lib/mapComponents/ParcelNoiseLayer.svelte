@@ -5,6 +5,13 @@
     export let map;
     import * as d3 from "d3";
 
+    // Add this function to manage base path for GitHub Pages deployment
+    function getBasePath() {
+        // For local development, use empty string
+        // For production GitHub Pages, use repository name
+        return import.meta.env.BASE_URL || '/';
+    }
+
     const colorMapping = {
         'Pink': '#7e1060',    
         'Orange': '#f9773f',  //neon green
@@ -30,15 +37,29 @@
     async function loadSimplifiedNoiseMap() {
         try {
             console.log('Loading simplified noise map');
+            const basePath = getBasePath();
+            const response = await fetch(`${basePath}data/parcels/simplified_noise_map.geojson`);
             
-            // This could be a placeholder until detailed data is loaded
-            map.addSource('simplified-noise', {
-                type: 'geojson',
-                data: {
-                    "type": "FeatureCollection",
-                    "features": []
-                }
-            });
+            if (response.ok) {
+                const data = await response.json();
+                
+                map.addSource('simplified-noise', {
+                    type: 'geojson',
+                    data: data
+                });
+                
+                // Rest of your function
+            } else {
+                // Fallback if file doesn't exist
+                map.addSource('simplified-noise', {
+                    type: 'geojson',
+                    data: {
+                        "type": "FeatureCollection",
+                        "features": []
+                    }
+                });
+                // Rest of your fallback code
+            }
             
             map.addLayer({
                 id: 'simplified-noise-layer',
@@ -85,12 +106,13 @@
 
     async function loadTownData(townId, files, layerId) {
         const features = [];
+        const basePath = getBasePath();
         
         for (const fileName of files) {
             if (fileName.startsWith('No_Data')) continue;
             
             try {
-                const response = await fetch(`/data/parcels/noise_by_town/${townId}/${fileName}`);
+                const response = await fetch(`${basePath}data/parcels/noise_by_town/${townId}/${fileName}`);
                 if (!response.ok) continue;
                 
                 const data = await response.json();
@@ -201,7 +223,8 @@
         }
 
         try {
-            const response = await fetch('/data/parcels/noise_by_town/directory_map.json');
+            const basePath = getBasePath();
+            const response = await fetch(`${basePath}data/parcels/noise_by_town/directory_map.json`);
             if (!response.ok) {
                 throw new Error('Failed to load directory map');
             }
