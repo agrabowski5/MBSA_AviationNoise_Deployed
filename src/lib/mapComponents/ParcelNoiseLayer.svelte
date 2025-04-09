@@ -215,9 +215,6 @@
         
         console.log('Initializing parcel data loading');
         
-        // Add simplified noise layer for immediate display
-        await loadSimplifiedNoiseMap();
-        
         // Clear any existing detail layers
         for (let i = 0; ; i++) {
             const layerId = `parcels-${i}`;
