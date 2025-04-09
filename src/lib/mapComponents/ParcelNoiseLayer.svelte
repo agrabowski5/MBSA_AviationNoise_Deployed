@@ -279,8 +279,32 @@
                 ctrlKeyPressed = true; // Still use same variable, just triggered by Alt now
                 activateMultiSelect();
             }
+            
+            // Add this section to handle Escape key
+            if (e.key === 'Escape') {
+                // Clear any selected parcels
+                if (hasSelectedParcels) {
+                    clearSelectedParcels();
+                }
+                
+                // Close any open tooltips
+                document.querySelectorAll('.mapboxgl-popup').forEach(popup => {
+                    popup.remove();
+                });
+                
+                // Hide the tooltip
+                d3.select("#tooltip").style("opacity", 0);
+                d3.select("#summary-tooltip").style("opacity", 0);
+                
+                // Deactivate multi-select if it's active
+                if (isMultiSelectActive) {
+                    ctrlKeyPressed = false;
+                    deactivateMultiSelect();
+                }
+            }
         });
         
+        // Rest of your existing keyboard handlers
         document.addEventListener('keyup', (e) => {
             if (e.key === 'Alt') {
                 ctrlKeyPressed = false;
