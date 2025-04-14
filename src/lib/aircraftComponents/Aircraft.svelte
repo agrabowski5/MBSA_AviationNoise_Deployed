@@ -4,7 +4,6 @@
   import { cubicInOut } from 'svelte/easing';
   import { getCompleteRoute, loganAirport } from './AirportRoutes.js';
 
-  // Add these at the top of your script
   // Function to get the correct base path
   function getBasePath() {
     return import.meta.env.BASE_URL || '/';
@@ -17,8 +16,66 @@
   export let startPoint = loganAirport;
   
   // Get the base flight path
-  let baseFlightPath = getCompleteRoute(routeName); // Reverse the path for landing
+  let baseFlightPath = getCompleteRoute(routeName);
   
+  // Add elevation data
+  const maxAltitude = 35000; // Maximum altitude in feet
+  let currentAltitude = 0;
+  let groundSpeed = 0;
+
+  // Replace your current calculateAltitude function with this one
+  function calculateAltitude(index, totalPoints) {
+    // Get the current point coordinates
+    const point = flightPath[index];
+    
+    // Calculate distance from airport (Logan)
+    const distance = Math.sqrt(
+      Math.pow(point[0] - loganAirport[0], 2) + 
+      Math.pow(point[1] - loganAirport[1], 2)
+    );
+    
+    // Find the maximum distance in the path for normalization
+    const maxDistance = getMaxDistanceFromAirport();
+    
+    // Simple distance-based altitude: the further from the airport, the higher the altitude
+    // Normalize distance to a 0-1 range, then multiply by max altitude
+    let altitudeFactor = distance / maxDistance;
+    
+    // Ensure we never exceed max altitude (due to potential rounding errors)
+    altitudeFactor = Math.min(altitudeFactor, 1.0);
+    
+    return Math.round(maxAltitude * altitudeFactor);
+  }
+
+  // Helper function to find the maximum distance from the airport in the flight path
+  function getMaxDistanceFromAirport() {
+    let maxDistance = 0;
+    
+    for (const point of flightPath) {
+      const distance = Math.sqrt(
+        Math.pow(point[0] - loganAirport[0], 2) + 
+        Math.pow(point[1] - loganAirport[1], 2)
+      );
+      
+      if (distance > maxDistance) {
+        maxDistance = distance;
+      }
+    }
+    
+    return maxDistance;
+  }
+  
+  // Function to calculate ground speed (simple variation between 450-550)
+  function calculateGroundSpeed(altitude) {
+    if (altitude < 1000) {
+      // Slower at low altitude
+      return Math.round(10);
+    } else {
+      // Random variation at cruise
+      return Math.round(450 + Math.random() * 10);
+    }
+  }
+
   // Function to interpolate points for smoother animation
   function interpolatePoints(path, numPointsBetween = 5) {
     if (!path || path.length < 2) return path;
@@ -52,6 +109,7 @@
   
   // Rest of component variables
   let aircraftElement;
+  let labelElement;
   let currentPathIndex = 0;
   let isAtAirport = false;
   let isLanding = true;
@@ -120,6 +178,15 @@
         currentPathIndex = 0;
         isLanding = !isLanding; // Toggle direction
         
+        // Set altitude immediately based on new flight direction
+        currentAltitude = isLanding ? maxAltitude : 0;
+        groundSpeed = calculateGroundSpeed(currentAltitude);
+        
+        // Update the label with the correct starting altitude
+        if (labelElement) {
+          labelElement.innerHTML = `<div class="flight-id">DAL 58 A333</div><div class="flight-data">${currentAltitude.toLocaleString()} FT ${groundSpeed} KTS</div>`;
+        }
+        
         // Either reverse the path or use original path
         flightPath = isLanding ? 
           interpolatePoints(baseFlightPath.reverse(), 8) : 
@@ -150,6 +217,15 @@
     const nextIndex = currentPathIndex + 1;
     const nextPoint = flightPath[nextIndex];
     const currentPoint = flightPath[currentPathIndex];
+    
+    // Calculate new altitude and speed values
+    currentAltitude = calculateAltitude(nextIndex, flightPath.length);
+    groundSpeed = calculateGroundSpeed(currentAltitude);
+    
+    // Update the flight label text
+    if (labelElement) {
+      labelElement.innerHTML = `<div class="flight-id">DAL 58 A333</div><div class="flight-data">${currentAltitude.toLocaleString()} FT ${groundSpeed} KTS</div>`;
+    }
     
     // Only update bearing if points are far enough apart to matter
     const distance = Math.sqrt(
@@ -203,9 +279,10 @@
     }
     
     return () => {
-      // Cleanup when component is destroyed
-      if (aircraftElement && aircraftElement.parentNode) {
-        aircraftElement.parentNode.removeChild(aircraftElement);
+      // Cleanup when component is destroyed - make sure to remove the container
+      const container = aircraftElement?.closest('.aircraft-container');
+      if (container) {
+        container.remove();
       }
     };
   });
@@ -213,34 +290,66 @@
   function createAircraftElement() {
     if (!map || !map.getCanvasContainer) return;
     
-    // Create a DOM element for the aircraft
+    // Remove any existing aircraft elements first to prevent duplicates
+    const existingContainers = document.querySelectorAll('.aircraft-container');
+    existingContainers.forEach(container => {
+      container.remove();
+    });
+    
+    // Create a container for aircraft and label
+    const container = document.createElement('div');
+    container.className = 'aircraft-container';
+    container.style.position = 'absolute';
+    container.style.zIndex = '9999';
+    
+    // Create aircraft element
     const el = document.createElement('div');
     el.className = 'aircraft-marker in-flight';
     
-    // Use SVG image instead of emoji
+    // Use SVG image
     const basePath = getBasePath();
     el.innerHTML = `<div class="aircraft-icon"><img src="${basePath}images/Aircraft_PPT.svg" alt="Aircraft" /></div>`;
-    el.style.position = 'absolute';
-    el.style.zIndex = '9999';
+    
+    // Create label element with correct initial altitude (0 or max depending on flight direction)
+    const initialAltitude = isLanding ? maxAltitude : 0;
+    const initialSpeed = calculateGroundSpeed(initialAltitude);
+    
+    const label = document.createElement('div');
+    label.className = 'aircraft-label';
+    label.innerHTML = `<div class="flight-id">DAL 58 A333</div><div class="flight-data">${initialAltitude.toLocaleString()} FT ${initialSpeed} KTS</div>`;
+    
+    // Add elements to container
+    container.appendChild(el);
+    container.appendChild(label);
     
     // Add to map
-    map.getCanvasContainer().appendChild(el);
+    map.getCanvasContainer().appendChild(container);
+    
     aircraftElement = el;
-    console.log("Aircraft element created with SVG image");
+    labelElement = label;
   }
   
-  // Update aircraft position on the map
+  // Update aircraft position on the map - this is the main fix
   $: if (map && aircraftElement && $aircraftPosition) {
     const point = map.project($aircraftPosition);
-    aircraftElement.style.left = `${point.x - 15}px`;
-    aircraftElement.style.top = `${point.y - 15}px`;
+    // Access the container directly instead of using parentNode
+    const container = aircraftElement.closest('.aircraft-container');
+    if (container) {
+      container.style.left = `${point.x - 15}px`;
+      container.style.top = `${point.y - 15}px`;
+    }
   }
 </script>
   
 <style>
-  :global(.aircraft-marker) {
+  :global(.aircraft-container) {
     z-index: 999;
     pointer-events: none;
+    display: flex;
+    align-items: center;
+  }
+
+  :global(.aircraft-marker) {
     filter: drop-shadow(0 0 3px rgba(0,0,0,0.5));
   }
   
@@ -251,10 +360,29 @@
   :global(.aircraft-icon img) {
     width: 32px;
     height: 32px;
-    /* Apply 80 degrees counterclockwise rotation */
     transform: rotate(-80deg);
-    /* Keep transform origin at center for proper rotation */
     transform-origin: center center;
+  }
+  
+  :global(.aircraft-label) {
+    font-family: monospace;
+    font-size: 12px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 2px 5px;
+    border-radius: 3px;
+    margin-left: 5px;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+    white-space: nowrap;
+  }
+  
+  :global(.flight-id) {
+    font-weight: bold;
+    color: #7cf;
+  }
+  
+  :global(.flight-data) {
+    color: #fff;
   }
   
   :global(.aircraft-marker.on-ground .aircraft-icon) {
