@@ -193,7 +193,10 @@
         active={showAircraftAnimation} 
         flightPath={flightPath}
     />
-    <ParcelNoiseLayer {map} />
+    <ParcelNoiseLayer 
+        map={map}
+        selectedTownId={selectedTownId}
+    />
 {/if}
 
 
