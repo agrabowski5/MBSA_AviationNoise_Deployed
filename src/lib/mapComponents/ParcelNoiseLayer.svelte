@@ -683,7 +683,7 @@ function drawScatterplot(features) {
         const noise = noiseMidpointMapping[noiseColor];
 
         if (noise !== undefined) {
-            const buildingValue = parseFloat(props.BLDG_VAL);
+            const buildingValue = parseFloat(props.BLDG_VAL)/10000000;
             const lotSize = parseFloat(props.LOT_SIZE);
 
             if (!isNaN(buildingValue)) {
@@ -737,7 +737,7 @@ function drawScatterplot(features) {
         .attr("x", -height / 2)
         .attr("y", -40)
         .attr("fill", "#000")
-        .text("Building Value ($)");
+        .text("Building Value ($10000000)");
 
     svg.append("g")
         .selectAll("circle")
