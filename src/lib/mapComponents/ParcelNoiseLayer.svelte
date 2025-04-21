@@ -565,8 +565,7 @@ function highlightSelectedParcels(selectedFeatures) {
     
     // Calculate and display summary
     calculateSummaryStatistics(selectedFeatures);
-    drawScatterplot();
-
+    drawScatterplot(selectedFeatures);
 }
 
 function clearSelectedParcels() {
@@ -675,42 +674,33 @@ function setupParcelClickHandler() {
     });
 }
 
-function drawScatterplot() {
+function drawScatterplot(features) {
     const data = [];
 
-    // Collect all features from all parcel layers
-    for (let i = 0; i < currentBatchIndex; i++) {
-        const layerId = `parcels-${i}`;
-        if (!map.getLayer(layerId)) continue;
+    features.forEach(feature => {
+        const props = feature.properties;
+        const noiseColor = props.noiseColor;
+        const noise = noiseMidpointMapping[noiseColor];
 
-        const features = map.queryRenderedFeatures({ layers: [layerId] });
+        if (noise !== undefined) {
+            const buildingValue = parseFloat(props.BLDG_VAL);
+            const lotSize = parseFloat(props.LOT_SIZE);
 
-        features.forEach(feature => {
-            const props = feature.properties;
-            const noiseColor = props.noiseColor;
-            const noise = noiseMidpointMapping[noiseColor];
-
-            if (noise !== undefined) {
-                const buildingValue = parseFloat(props.BLDG_VAL)/10000000;
-                const lotSize = parseFloat(props.LOT_SIZE);
-                
-                if (!isNaN(buildingValue)) {
-                    data.push({
-                        noise,
-                        buildingValue,
-                        lotSize: isNaN(lotSize) ? 0 : lotSize
-                    });
-                }
+            if (!isNaN(buildingValue)) {
+                data.push({
+                    noise,
+                    buildingValue,
+                    lotSize: isNaN(lotSize) ? 0 : lotSize
+                });
             }
-        });
-    }
+        }
+    });
 
     if (!data.length) {
         console.warn("No data available for scatterplot.");
         return;
     }
 
-    // Clear old plot
     d3.select("#scatterplot").selectAll("*").remove();
 
     const svg = d3.select("#scatterplot"),
@@ -719,7 +709,7 @@ function drawScatterplot() {
         margin = { top: 10, right: 20, bottom: 40, left: 60 };
 
     const x = d3.scaleLinear()
-        .domain([40, 75])  // Noise level range
+        .domain([40, 75])
         .range([margin.left, width - margin.right]);
 
     const y = d3.scaleLinear()
@@ -747,7 +737,7 @@ function drawScatterplot() {
         .attr("x", -height / 2)
         .attr("y", -40)
         .attr("fill", "#000")
-        .text("Building Value (in $10000000)");
+        .text("Building Value ($)");
 
     svg.append("g")
         .selectAll("circle")
@@ -758,7 +748,6 @@ function drawScatterplot() {
         .attr("r", d => r(d.lotSize))
         .attr("fill", "steelblue")
         .attr("opacity", 0.6);
-
 }
 
     // Object for legend text descriptions
