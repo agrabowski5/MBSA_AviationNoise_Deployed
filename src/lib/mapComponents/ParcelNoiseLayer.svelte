@@ -565,6 +565,8 @@ function highlightSelectedParcels(selectedFeatures) {
     
     // Calculate and display summary
     calculateSummaryStatistics(selectedFeatures);
+    drawScatterplot();
+
 }
 
 function clearSelectedParcels() {
@@ -673,6 +675,92 @@ function setupParcelClickHandler() {
     });
 }
 
+function drawScatterplot() {
+    const data = [];
+
+    // Collect all features from all parcel layers
+    for (let i = 0; i < currentBatchIndex; i++) {
+        const layerId = `parcels-${i}`;
+        if (!map.getLayer(layerId)) continue;
+
+        const features = map.queryRenderedFeatures({ layers: [layerId] });
+
+        features.forEach(feature => {
+            const props = feature.properties;
+            const noiseColor = props.noiseColor;
+            const noise = noiseMidpointMapping[noiseColor];
+
+            if (noise !== undefined) {
+                const buildingValue = parseFloat(props.BLDG_VAL)/10000000;
+                const lotSize = parseFloat(props.LOT_SIZE);
+                
+                if (!isNaN(buildingValue)) {
+                    data.push({
+                        noise,
+                        buildingValue,
+                        lotSize: isNaN(lotSize) ? 0 : lotSize
+                    });
+                }
+            }
+        });
+    }
+
+    if (!data.length) {
+        console.warn("No data available for scatterplot.");
+        return;
+    }
+
+    // Clear old plot
+    d3.select("#scatterplot").selectAll("*").remove();
+
+    const svg = d3.select("#scatterplot"),
+        width = +svg.attr("width"),
+        height = +svg.attr("height"),
+        margin = { top: 10, right: 20, bottom: 40, left: 60 };
+
+    const x = d3.scaleLinear()
+        .domain([40, 75])  // Noise level range
+        .range([margin.left, width - margin.right]);
+
+    const y = d3.scaleLinear()
+        .domain([0, d3.max(data, d => d.buildingValue)]).nice()
+        .range([height - margin.bottom, margin.top]);
+
+    const r = d3.scaleSqrt()
+        .domain([0, d3.max(data, d => d.lotSize)])
+        .range([2, 12]);
+
+    svg.append("g")
+        .attr("transform", `translate(0,${height - margin.bottom})`)
+        .call(d3.axisBottom(x))
+        .append("text")
+        .attr("x", width / 2)
+        .attr("y", 30)
+        .attr("fill", "#000")
+        .text("Noise Level (dB)");
+
+    svg.append("g")
+        .attr("transform", `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y))
+        .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -height / 2)
+        .attr("y", -40)
+        .attr("fill", "#000")
+        .text("Building Value (in $10000000)");
+
+    svg.append("g")
+        .selectAll("circle")
+        .data(data)
+        .join("circle")
+        .attr("cx", d => x(d.noise))
+        .attr("cy", d => y(d.buildingValue))
+        .attr("r", d => r(d.lotSize))
+        .attr("fill", "steelblue")
+        .attr("opacity", 0.6);
+
+}
+
     // Object for legend text descriptions
     const noiseLevelDescriptions = {
         "Pink": "High Noise: 60 - 70 dB",
@@ -735,6 +823,12 @@ function setupParcelClickHandler() {
 <div class="multi-select-tip">
     <p><strong>Tip:</strong> Hold <kbd>Alt</kbd> (Windows) or <kbd>Option</kbd> (Mac) to activate multi-select tool</p>
 </div>
+
+<div id="scatterplot-container" style="position: absolute; top: 80px; left: 10px; width: 400px; height: 400px; background: rgba(255,255,255,0.95); border: 1px solid #ccc; border-radius: 8px; overflow: hidden; z-index: 10; padding: 10px;">
+  <h4 style="margin: 0 0 10px;">Building Value vs Noise Level</h4>
+  <svg id="scatterplot" width="380" height="350"></svg>
+</div>
+
 
 <style>
     /* Add this CSS for the title */
