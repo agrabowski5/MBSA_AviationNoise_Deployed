@@ -674,6 +674,104 @@ function setupParcelClickHandler() {
     });
 }
 
+//Trying lasso select tool
+const lassoGroup = svg.append("g")
+    .attr("id", "lasso-group")
+    .style("display", "none");
+
+let lassoPoints = [];
+let isDrawingLasso = false;
+
+function enableFreeformLasso() {
+    lassoGroup.style("display", "block");
+    map.getCanvas().style.cursor = "crosshair";
+
+    // Disable map interactions while drawing
+    map.dragPan.disable();
+    map.doubleClickZoom.disable();
+    map.scrollZoom.disable();
+    map.boxZoom.disable();
+    map.keyboard.disable();
+
+    svg.on("mousedown", (event) => {
+        isDrawingLasso = true;
+        lassoPoints = [];
+        lassoGroup.selectAll("*").remove();
+    });
+
+    svg.on("mousemove", (event) => {
+        if (!isDrawingLasso) return;
+
+        const [x, y] = d3.pointer(event);
+        lassoPoints.push([x, y]);
+
+        const path = d3.line()(lassoPoints);
+        lassoGroup.selectAll("path").remove();
+        lassoGroup.append("path")
+            .attr("d", path)
+            .attr("fill", "rgba(0, 0, 255, 0.1)")
+            .attr("stroke", "blue")
+            .attr("stroke-width", 2);
+    });
+
+    svg.on("mouseup", () => {
+        if (!isDrawingLasso || lassoPoints.length < 3) return;
+
+        isDrawingLasso = false;
+        svg.on("mousedown", null);
+        svg.on("mousemove", null);
+        svg.on("mouseup", null);
+
+        // Close the polygon
+        lassoPoints.push(lassoPoints[0]);
+
+        // Convert screen points to map coordinates
+        const polygon = turf.polygon([lassoPoints.map(p => {
+            const lngLat = map.unproject(p);
+            return [lngLat.lng, lngLat.lat];
+        })]);
+
+        selectParcelsInPolygon(polygon);
+        lassoGroup.style("display", "none");
+
+        // ✅ Re-enable map interactions
+        map.dragPan.enable();
+        map.doubleClickZoom.enable();
+        map.scrollZoom.enable();
+        map.boxZoom.enable();
+        map.keyboard.enable();
+        map.getCanvas().style.cursor = "";
+    });
+}
+
+
+function selectParcelsInPolygon(polygon) {
+    const queryLayers = ['simplified-noise-layer'];
+    for (let i = 0; i < currentBatchIndex; i++) {
+        queryLayers.push(`parcels-${i}`);
+    }
+
+    const validLayers = queryLayers.filter(layer => map.getLayer(layer));
+    const features = map.queryRenderedFeatures({ layers: validLayers });
+
+    const selectedFeatures = features.filter(f => {
+        const turfFeature = turf.feature(f.geometry);
+        return turf.booleanIntersects(polygon, turfFeature);
+    });
+
+    if (selectedFeatures.length > 0) {
+        highlightSelectedParcels(selectedFeatures);
+    } else {
+        console.log("No parcels intersect the drawn lasso.");
+    }
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'l' || e.key === 'L') {l
+        enableFreeformLasso();
+    }
+});
+
 function drawScatterplot(features) {
     const data = [];
 
