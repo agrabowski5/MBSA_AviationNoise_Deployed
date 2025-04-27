@@ -565,6 +565,7 @@ function highlightSelectedParcels(selectedFeatures) {
     
     // Calculate and display summary
     calculateSummaryStatistics(selectedFeatures);
+    drawScatterplot(selectedFeatures);
 }
 
 function clearSelectedParcels() {
@@ -673,6 +674,180 @@ function setupParcelClickHandler() {
     });
 }
 
+//Trying lasso select tool
+const lassoGroup = svg.append("g")
+    .attr("id", "lasso-group")
+    .style("display", "none");
+
+let lassoPoints = [];
+let isDrawingLasso = false;
+
+function enableFreeformLasso() {
+    lassoGroup.style("display", "block");
+    map.getCanvas().style.cursor = "crosshair";
+
+    // Disable map interactions while drawing
+    map.dragPan.disable();
+    map.doubleClickZoom.disable();
+    map.scrollZoom.disable();
+    map.boxZoom.disable();
+    map.keyboard.disable();
+
+    svg.on("mousedown", (event) => {
+        isDrawingLasso = true;
+        lassoPoints = [];
+        lassoGroup.selectAll("*").remove();
+    });
+
+    svg.on("mousemove", (event) => {
+        if (!isDrawingLasso) return;
+
+        const [x, y] = d3.pointer(event);
+        lassoPoints.push([x, y]);
+
+        const path = d3.line()(lassoPoints);
+        lassoGroup.selectAll("path").remove();
+        lassoGroup.append("path")
+            .attr("d", path)
+            .attr("fill", "rgba(0, 0, 255, 0.1)")
+            .attr("stroke", "blue")
+            .attr("stroke-width", 2);
+    });
+
+    svg.on("mouseup", () => {
+        if (!isDrawingLasso || lassoPoints.length < 3) return;
+
+        isDrawingLasso = false;
+        svg.on("mousedown", null);
+        svg.on("mousemove", null);
+        svg.on("mouseup", null);
+
+        // Close the polygon
+        lassoPoints.push(lassoPoints[0]);
+
+        // Convert screen points to map coordinates
+        const polygon = turf.polygon([lassoPoints.map(p => {
+            const lngLat = map.unproject(p);
+            return [lngLat.lng, lngLat.lat];
+        })]);
+
+        selectParcelsInPolygon(polygon);
+        lassoGroup.style("display", "none");
+
+        // ✅ Re-enable map interactions
+        map.dragPan.enable();
+        map.doubleClickZoom.enable();
+        map.scrollZoom.enable();
+        map.boxZoom.enable();
+        map.keyboard.enable();
+        map.getCanvas().style.cursor = "";
+    });
+}
+
+
+function selectParcelsInPolygon(polygon) {
+    const queryLayers = ['simplified-noise-layer'];
+    for (let i = 0; i < currentBatchIndex; i++) {
+        queryLayers.push(`parcels-${i}`);
+    }
+
+    const validLayers = queryLayers.filter(layer => map.getLayer(layer));
+    const features = map.queryRenderedFeatures({ layers: validLayers });
+
+    const selectedFeatures = features.filter(f => {
+        const turfFeature = turf.feature(f.geometry);
+        return turf.booleanIntersects(polygon, turfFeature);
+    });
+
+    if (selectedFeatures.length > 0) {
+        highlightSelectedParcels(selectedFeatures);
+    } else {
+        console.log("No parcels intersect the drawn lasso.");
+    }
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'l' || e.key === 'L') {l
+        enableFreeformLasso();
+    }
+});
+
+function drawScatterplot(features) {
+    const data = [];
+
+    features.forEach(feature => {
+        const props = feature.properties;
+        const noiseColor = props.noiseColor;
+        const noise = noiseMidpointMapping[noiseColor];
+
+        if (noise !== undefined) {
+            const buildingValue = parseFloat(props.BLDG_VAL)/10000000;
+            const lotSize = parseFloat(props.LOT_SIZE);
+
+            if (!isNaN(buildingValue)) {
+                data.push({
+                    noise,
+                    buildingValue,
+                    lotSize: isNaN(lotSize) ? 0 : lotSize
+                });
+            }
+        }
+    });
+
+    if (!data.length) {
+        console.warn("No data available for scatterplot.");
+        return;
+    }
+
+    d3.select("#scatterplot").selectAll("*").remove();
+
+    const svg = d3.select("#scatterplot"),
+        width = +svg.attr("width"),
+        height = +svg.attr("height"),
+        margin = { top: 10, right: 20, bottom: 40, left: 60 };
+
+    const x = d3.scaleLinear()
+        .domain([40, 75])
+        .range([margin.left, width - margin.right]);
+
+    const y = d3.scaleLinear()
+        .domain([0, d3.max(data, d => d.buildingValue)]).nice()
+        .range([height - margin.bottom, margin.top]);
+
+    const r = d3.scaleSqrt()
+        .domain([0, d3.max(data, d => d.lotSize)])
+        .range([2, 12]);
+
+    svg.append("g")
+        .attr("transform", `translate(0,${height - margin.bottom})`)
+        .call(d3.axisBottom(x))
+        .append("text")
+        .attr("x", width / 2)
+        .attr("y", 30)
+        .attr("fill", "#000")
+        .text("Noise Level (dB)");
+
+    svg.append("g")
+        .attr("transform", `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y))
+        .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -height / 2)
+        .attr("y", -40)
+        .attr("fill", "#000")
+        .text("Building Value ($10000000)");
+
+    svg.append("g")
+        .selectAll("circle")
+        .data(data)
+        .join("circle")
+        .attr("cx", d => x(d.noise))
+        .attr("cy", d => y(d.buildingValue))
+        .attr("r", d => r(d.lotSize))
+        .attr("fill", "steelblue")
+        .attr("opacity", 0.6);
+}
+
     // Object for legend text descriptions
     const noiseLevelDescriptions = {
         "Pink": "High Noise: 60 - 70 dB",
@@ -735,6 +910,12 @@ function setupParcelClickHandler() {
 <div class="multi-select-tip">
     <p><strong>Tip:</strong> Hold <kbd>Alt</kbd> (Windows) or <kbd>Option</kbd> (Mac) to activate multi-select tool</p>
 </div>
+
+<div id="scatterplot-container" style="position: absolute; top: 80px; left: 10px; width: 400px; height: 400px; background: rgba(255,255,255,0.95); border: 1px solid #ccc; border-radius: 8px; overflow: hidden; z-index: 10; padding: 10px;">
+  <h4 style="margin: 0 0 10px;">Building Value vs Noise Level</h4>
+  <svg id="scatterplot" width="380" height="350"></svg>
+</div>
+
 
 <style>
     /* Add this CSS for the title */
