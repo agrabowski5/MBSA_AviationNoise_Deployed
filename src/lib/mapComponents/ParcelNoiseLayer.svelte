@@ -34,6 +34,9 @@
     let ctrlKeyPressed = false;
     let isMultiSelectActive = false;
 
+    // Add a state variable to control scatterplot visibility
+    let showScatterplot = false;
+
     async function loadSimplifiedNoiseMap() {
         try {
             console.log('Loading simplified noise map');
@@ -534,7 +537,6 @@ function calculateSummaryStatistics(selectedFeatures) {
         `);
 }
 
-
 function highlightSelectedParcels(selectedFeatures) {
     const selectedGeoJSON = {
         type: "FeatureCollection",
@@ -565,7 +567,18 @@ function highlightSelectedParcels(selectedFeatures) {
     
     // Calculate and display summary
     calculateSummaryStatistics(selectedFeatures);
-    drawScatterplot(selectedFeatures);
+    
+    // Only show scatterplot for multi-select operations with enough data points
+    if (isMultiSelectActive && selectedFeatures.length > 5) {
+        console.log("Multi-select active with", selectedFeatures.length, "parcels - showing scatterplot");
+        showScatterplot = true;
+        setTimeout(() => {
+            drawScatterplot(selectedFeatures);
+        }, 10); // Small delay to ensure DOM elements are ready
+    } else {
+        console.log("Not showing scatterplot:", isMultiSelectActive, selectedFeatures.length);
+        showScatterplot = false;
+    }
 }
 
 function clearSelectedParcels() {
@@ -578,6 +591,9 @@ function clearSelectedParcels() {
         
         // Hide the summary tooltip
         d3.select("#summary-tooltip").style("opacity", 0);
+        
+        // Hide scatterplot
+        showScatterplot = false;
         
         // Reset the flag
         hasSelectedParcels = false;
@@ -773,22 +789,26 @@ document.addEventListener('keydown', (e) => {
 });
 
 function drawScatterplot(features) {
+    console.log("Drawing scatterplot with", features.length, "features");
+    
     const data = [];
-
+    
+    // Extract data from features
     features.forEach(feature => {
         const props = feature.properties;
         const noiseColor = props.noiseColor;
-        const noise = noiseMidpointMapping[noiseColor];
-
-        if (noise !== undefined) {
-            const buildingValue = parseFloat(props.BLDG_VAL)/10000000;
+        
+        if (noiseColor && noiseMidpointMapping[noiseColor] !== undefined) {
+            const noise = noiseMidpointMapping[noiseColor];
+            const buildingValue = parseFloat(props.BLDG_VAL)/1000000; // Scale to millions
             const lotSize = parseFloat(props.LOT_SIZE);
 
             if (!isNaN(buildingValue)) {
                 data.push({
                     noise,
                     buildingValue,
-                    lotSize: isNaN(lotSize) ? 0 : lotSize
+                    lotSize: isNaN(lotSize) ? 0 : lotSize,
+                    color: noiseColor // Store original color for display
                 });
             }
         }
@@ -796,35 +816,54 @@ function drawScatterplot(features) {
 
     if (!data.length) {
         console.warn("No data available for scatterplot.");
+        showScatterplot = false;
         return;
     }
-
+    
+    console.log("Plotting data:", data.length, "points");
+    
+    // Make sure element exists before clearing it
+    const scatterplotElement = document.getElementById("scatterplot");
+    if (!scatterplotElement) {
+        console.error("Scatterplot SVG element not found");
+        return;
+    }
+    
+    // Clear previous plot
     d3.select("#scatterplot").selectAll("*").remove();
 
     const svg = d3.select("#scatterplot"),
         width = +svg.attr("width"),
         height = +svg.attr("height"),
-        margin = { top: 10, right: 20, bottom: 40, left: 60 };
+        margin = { top: 30, right: 30, bottom: 50, left: 70 };
 
+    // Set visibility explicitly
+    showScatterplot = true;
+    console.log("Set showScatterplot to", showScatterplot);
+    
+    // Make scale domains more sensible for your data
     const x = d3.scaleLinear()
-        .domain([40, 75])
+        .domain([45, 70]) // Adjusted domain for noise levels (dB)
         .range([margin.left, width - margin.right]);
 
     const y = d3.scaleLinear()
-        .domain([0, d3.max(data, d => d.buildingValue)]).nice()
+        .domain([0, d3.max(data, d => d.buildingValue) * 1.1]).nice() // Add 10% padding
         .range([height - margin.bottom, margin.top]);
 
     const r = d3.scaleSqrt()
         .domain([0, d3.max(data, d => d.lotSize)])
-        .range([2, 12]);
+        .range([3, 12]);
 
+    // Add axes with better labels
     svg.append("g")
         .attr("transform", `translate(0,${height - margin.bottom})`)
         .call(d3.axisBottom(x))
         .append("text")
         .attr("x", width / 2)
-        .attr("y", 30)
-        .attr("fill", "#000")
+        .attr("y", 35) // Increased for better visibility
+        .attr("fill", "white") // Changed to white for dark background
+        .attr("font-weight", "bold")
+        .attr("font-size", "14px") // Increased size
         .text("Noise Level (dB)");
 
     svg.append("g")
@@ -833,10 +872,13 @@ function drawScatterplot(features) {
         .append("text")
         .attr("transform", "rotate(-90)")
         .attr("x", -height / 2)
-        .attr("y", -40)
-        .attr("fill", "#000")
-        .text("Building Value ($10000000)");
+        .attr("y", -45) // Moved further left
+        .attr("fill", "white") // Changed to white for dark background
+        .attr("font-weight", "bold")
+        .attr("font-size", "14px") // Increased size
+        .text("Building Value (millions $)");
 
+    // Add circles colored by noise category
     svg.append("g")
         .selectAll("circle")
         .data(data)
@@ -844,8 +886,112 @@ function drawScatterplot(features) {
         .attr("cx", d => x(d.noise))
         .attr("cy", d => y(d.buildingValue))
         .attr("r", d => r(d.lotSize))
-        .attr("fill", "steelblue")
-        .attr("opacity", 0.6);
+        .attr("fill", d => colorMapping[d.color] || "gray")
+        .attr("opacity", 0.7)
+        .attr("stroke", "white")
+        .attr("stroke-width", 0.5);
+        
+    // Add trendline
+    if (data.length > 5) {
+        // Calculate linear regression
+        const xValues = data.map(d => d.noise);
+        const yValues = data.map(d => d.buildingValue);
+        
+        const n = xValues.length;
+        const sumX = xValues.reduce((a, b) => a + b, 0);
+        const sumY = yValues.reduce((a, b) => a + b, 0);
+        const sumXY = xValues.reduce((a, b, i) => a + b * yValues[i], 0);
+        const sumXX = xValues.reduce((a, b) => a + b * b, 0);
+        
+        const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+        const intercept = (sumY - slope * sumX) / n;
+        
+        // Add the trendline
+        const line = d3.line()
+            .x(d => x(d))
+            .y(d => y(intercept + slope * d));
+            
+        const xRange = [x.domain()[0], x.domain()[1]]; // Use the actual domain
+            
+        svg.append("path")
+            .datum(xRange)
+            .attr("fill", "none")
+            .attr("stroke", "red")
+            .attr("stroke-width", 2)
+            .attr("stroke-dasharray", "4")
+            .attr("d", line);
+            
+        // Add correlation coefficient and trend information
+        const correlation = calculateCorrelation(xValues, yValues);
+        
+        // Add a more descriptive correlation text
+        let correlationText = `Correlation: ${correlation.toFixed(2)}`;
+        if (correlation < -0.5) {
+            correlationText += " (Strong Negative)";
+        } else if (correlation < -0.3) {
+            correlationText += " (Moderate Negative)";
+        } else if (correlation < 0) {
+            correlationText += " (Weak Negative)";
+        } else if (correlation < 0.3) {
+            correlationText += " (Weak Positive)";
+        } else if (correlation < 0.5) {
+            correlationText += " (Moderate Positive)";
+        } else {
+            correlationText += " (Strong Positive)";
+        }
+        
+        svg.append("text")
+            .attr("x", margin.left + 10)
+            .attr("y", margin.top)
+            .attr("fill", "white")
+            .attr("font-size", "12px")
+            .text(correlationText);
+            
+        // Add trend description
+        svg.append("text")
+            .attr("x", margin.left + 10)
+            .attr("y", margin.top + 20)
+            .attr("fill", slope < 0 ? "#FF9999" : "#99FF99") // Red for negative, green for positive
+            .attr("font-size", "12px")
+            .text(`Trend: ${slope < 0 ? "Value decreases" : "Value increases"} with noise`);
+    }
+    
+    // Add legend with better styling
+    const legend = svg.append("g")
+        .attr("transform", `translate(${width - margin.right - 120}, ${margin.top + 5})`);
+        
+    Object.entries(noiseLevelMapping).forEach(([color, level], i) => {
+        legend.append("rect")
+            .attr("x", 0)
+            .attr("y", i * 20)
+            .attr("width", 15)
+            .attr("height", 15)
+            .attr("fill", colorMapping[color])
+            .attr("stroke", "white")
+            .attr("stroke-width", 0.5);
+            
+        legend.append("text")
+            .attr("x", 20)
+            .attr("y", i * 20 + 12)
+            .attr("font-size", "11px")
+            .attr("fill", "white")
+            .text(level);
+    });
+}
+
+// Helper function to calculate correlation coefficient
+function calculateCorrelation(xValues, yValues) {
+    const n = xValues.length;
+    const sumX = xValues.reduce((a, b) => a + b, 0);
+    const sumY = yValues.reduce((a, b) => a + b, 0);
+    const sumXY = xValues.reduce((a, b, i) => a + b * yValues[i], 0);
+    const sumXX = xValues.reduce((a, b) => a + b * b, 0);
+    const sumYY = yValues.reduce((a, b) => a + b * b, 0);
+    
+    const numerator = n * sumXY - sumX * sumY;
+    const denominator = Math.sqrt((n * sumXX - sumX * sumX) * (n * sumYY - sumY * sumY));
+    
+    return denominator === 0 ? 0 : numerator / denominator;
 }
 
     // Object for legend text descriptions
@@ -907,15 +1053,54 @@ function drawScatterplot(features) {
     opacity: 0;
 "></div>
 
+<div id="tooltip" style="
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    pointer-events: none;
+    z-index: 200;
+    opacity: 0;
+    transition: opacity 0.2s;
+"></div>
+
+<!-- Fix the scatterplot container to ensure it's always in the DOM -->
+<div id="scatterplot-container" style="
+    position: absolute; 
+    top: 80px; 
+    left: 10px; 
+    width: 400px; 
+    height: 400px; 
+    background: rgba(50, 50, 50, 0.95); 
+    color: white; 
+    border: 1px solid #555; 
+    border-radius: 8px; 
+    overflow: hidden; 
+    z-index: 10; 
+    padding: 10px; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    display: {showScatterplot ? 'block' : 'none'};
+">
+  <h4 style="margin: 0 0 10px; font-size: 16px; border-bottom: 1px solid #777; padding-bottom: 5px;">
+    Building Value vs Noise Level Analysis
+  </h4>
+  <p style="margin: 0 0 10px; font-size: 12px;">
+    Selected {#if hasSelectedParcels && map.getSource("selected-parcels")}
+      {map.getSource("selected-parcels")._data.features.length}
+    {:else}
+      0
+    {/if} parcels
+  </p>
+  <svg id="scatterplot" width="380" height="350"></svg>
+  <button style="position: absolute; top: 10px; right: 10px; background: transparent; color: white; border: none; font-size: 16px; cursor: pointer;" 
+    on:click={() => { showScatterplot = false; }}>×</button>
+</div>
+
 <div class="multi-select-tip">
     <p><strong>Tip:</strong> Hold <kbd>Alt</kbd> (Windows) or <kbd>Option</kbd> (Mac) to activate multi-select tool</p>
 </div>
-
-<div id="scatterplot-container" style="position: absolute; top: 80px; left: 10px; width: 400px; height: 400px; background: rgba(255,255,255,0.95); border: 1px solid #ccc; border-radius: 8px; overflow: hidden; z-index: 10; padding: 10px;">
-  <h4 style="margin: 0 0 10px;">Building Value vs Noise Level</h4>
-  <svg id="scatterplot" width="380" height="350"></svg>
-</div>
-
 
 <style>
     /* Add this CSS for the title */
