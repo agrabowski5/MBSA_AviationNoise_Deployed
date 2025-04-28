@@ -21,27 +21,20 @@
 
 {#if (active)}
     <div class="slide">
+        <h1>Neighborhoods with elevated hypertension rates often have high proportions of BIPOC residents</h1>
         <p>
-            Use this interactive map to explore the potential effects of siting multifamily districts near different
-            transit stations within communities. In addition to providing detailed parcel-level information about
-            current zoning and usage patterns and how these might change if upzoning were to occur, the tool provides
-            relevant demographic statistics about the area surrounding each MBTA station.
+            Located near airports or along main runway approach paths, these neighborhoods are exposed to high 
+            levels of aircraft noise, further exacerbating the health vulnerabilities faced by marginalized communities.
         </p>
         <br>
-        <br>
-        <br>
-        <br>
-        <div class="select-container">
-            <Select {items} {searchable} on:change={handleSelect} on:click={handleSelect} class="searchbar"
-                    placeholder="Please select a municipality"/>
-        </div>
+        <img src="/images/demographics_health.png" alt="Demographics plot">
     </div>
 {/if}
 
 <style>
     @import url("$lib/global.css");
     @import url("$lib/slide.css");
-
+    /*
     :global(.searchbar) {
         z-index: 100;
         font: 18px sans-serif;
@@ -59,4 +52,5 @@
     .select-container {
         width: 40%;
     }
+        */
 </style>
