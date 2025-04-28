@@ -130,7 +130,12 @@
             bind:selectedMunicipality={selectedMunicipality}
             on:zoomTo={handleZoomTo}
         />
-        <Slide6 active={isSlide6Active} bind:value={value}/>
+        <Slide6 
+            active={isSlide6Active} 
+            bind:municipalities={municipalities}
+            bind:selectedMunicipality={selectedMunicipality} 
+            on:zoomTo={handleZoomTo} 
+        />
         <Slide7 active={isSlide7Active} bind:value={value}/>
     </Scrolly>
 </div>

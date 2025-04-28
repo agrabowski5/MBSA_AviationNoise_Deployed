@@ -24,7 +24,7 @@
     function zoomToDorchester() {
         // This event will be captured in the parent component
         dispatch('zoomTo', {
-            center: [-71.057690, 42.327715],
+            center: [-71.057690, 42.32715],
             zoom: 13.5
         });
         

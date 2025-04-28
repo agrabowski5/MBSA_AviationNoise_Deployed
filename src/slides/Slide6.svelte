@@ -1,5 +1,8 @@
 <script>
     import Select from 'svelte-select';
+    import { createEventDispatcher } from 'svelte';
+    
+    const dispatch = createEventDispatcher();
 
     export let active = false;
     export let municipalities = [];
@@ -17,16 +20,26 @@
     }));
 
     const searchable = true;
-/*
-    map.flyTo({
-    center: [-70.99195706754855,42.38399852653385],
-    zoom: 12
-    });
-*/
 
+    // Simple function to zoom to East Boston by dispatching an event
+    function zoomToEastBoston() {
+        // This event will be captured in the parent component
+        dispatch('zoomTo', {
+            center: [-70.99832, 42.37512],
+            zoom: 13.5
+        });
+        
+        // Optionally select Boston in the dropdown if available
+        const boston = municipalities.find(m => 
+            m.Name && m.Name.toLowerCase().includes('boston'));
+            
+        if (boston) {
+            selectedMunicipality = boston;
+        }
+    }
 </script>
 
-{#if (active)}
+{#if active}
     <div class="slide">
         <h1>This is East Boston. Let's say you wanted to move to this neighborhood. What is the tradeoff you may have
             to make regarding house prices and the level of aircraft noise you may have to face?</h1>
@@ -39,29 +52,38 @@
             a correlation between the two.
         </p>
         <br>
+        <button class="zoom-button" on:click={zoomToEastBoston}>
+            🔍 Zoom to East Boston
+        </button>
     </div>
 {/if}
 
 <style>
     @import url("$lib/global.css");
     @import url("$lib/slide.css");
-    /*
-    :global(.searchbar) {
-        z-index: 100;
-        font: 18px sans-serif;
-        font-family: 'Montserrat', sans-serif;
-        visibility: visible;
-        background-color: rgba(10, 0, 0, 0.4) !important;
-        backdrop-filter: blur(8px) !important;
-        border-radius: 10px;
-        width: 200px;
-        color: #a9987a;
-        position: fixed;
-        padding: 10px;
+    
+    .zoom-button {
+        background-color: #B87A45;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 16px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        margin-top: 10px;
     }
-
-    .select-container {
-        width: 40%;
+    
+    .zoom-button:hover {
+        background-color: #D89A65;
+        transform: translateY(-2px);
     }
-        */
+    
+    .zoom-button:active {
+        transform: translateY(0);
+    }
 </style>
