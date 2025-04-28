@@ -1,8 +1,8 @@
 <script>
-    export let active = false;
+    // export let active = false;
     import {observerStore} from '../lib/panelComponents/Scrolly_slide';
 
-    export let value;
+    // export let value;
     let isVisible = false;
 
     const unsubscribe = observerStore.subscribe(store => {
@@ -10,22 +10,24 @@
     });
 
     // Reactive statement to monitor changes in value
+    /*
     $: if (value === 1) {
         console.log(isVisible)
         observerStore.startObservation();
         console.log(isVisible)
-    }
+    }*/
 </script>
 
 <div class="slide">
-    <h1>Aviation Noise is everywhere</h1>
-    {#if isVisible}
-        <p>
-            It's constantly above us and making a ton of racket. 
-        </p>
-        <br>
-        <div class="scroll-indicator"></div>
-    {/if}
+    <h1>Continuous Exposure to Aircraft Noise can lead to Serious Health Risks</h1>
+    <p>
+        Research has shown that residential areas with substantial noise exposure 
+        experience higher cardiovascular hospital admission rates. <br><br>
+        The Hypertension and Exposure to Noise near Airports (HYENA) study found a significant 
+        increase in blood pressure with increases in nighttime aircraft noise
+    </p>
+    <br>
+    <div class="scroll-indicator"></div>
 </div>
 
 <style>
