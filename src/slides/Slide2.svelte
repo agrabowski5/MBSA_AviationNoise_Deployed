@@ -1,56 +1,38 @@
 <script>
-    import Select from 'svelte-select';
+    // export let active = false;
+    import {observerStore} from '../lib/panelComponents/Scrolly_slide';
 
-    export let active = false;
-    export let municipalities = [];
-    export let selectedMunicipality = {};
-    let input = "";
+    // export let value;
+    let isVisible = false;
 
-    function handleSelect(e) {
-        selectedMunicipality = e.detail.value;
-    }
+    const unsubscribe = observerStore.subscribe(store => {
+        isVisible = store.isVisible;
+    });
 
-    $: items = municipalities?.map(m => ({
-        'value': m,
-        'label': m.Name
-        // 'selectable': m.Selectable
-    }));
+    // Reactive statement to monitor changes in value
+    /*
+    $: if (value === 1) {
+        console.log(isVisible)
+        observerStore.startObservation();
+        console.log(isVisible)
+    }*/
 
-    const searchable = true;
 </script>
 
-{#if (active)}
-    <div class="slide">
-        <h1>Neighborhoods with elevated hypertension rates often have high proportions of BIPOC residents</h1>
-        <p>
-            Located near airports or along main runway approach paths, these neighborhoods are exposed to high 
-            levels of aircraft noise, further exacerbating the health vulnerabilities faced by marginalized communities.
-        </p>
-        <br>
-        <img src="/images/demographics_health.png" alt="Demographics plot" width="90%" height="auto">
-    </div>
-{/if}
+<div class="slide">
+    <h1>Continuous Exposure to Aircraft Noise can lead to Serious Health Risks</h1>
+    <p>
+        Research has shown that residential areas with substantial noise exposure 
+        experience higher cardiovascular hospital admission rates. <br><br>
+        The Hypertension and Exposure to Noise near Airports (HYENA) study found a significant 
+        increase in blood pressure with increases in nighttime aircraft noise
+    </p>
+    <br>
+    <div class="scroll-indicator"></div>
+</div>
 
 <style>
-    @import url("$lib/global.css");
     @import url("$lib/slide.css");
-    /*
-    :global(.searchbar) {
-        z-index: 100;
-        font: 18px sans-serif;
-        font-family: 'Montserrat', sans-serif;
-        visibility: visible;
-        background-color: rgba(10, 0, 0, 0.4) !important;
-        backdrop-filter: blur(8px) !important;
-        border-radius: 10px;
-        width: 200px;
-        color: #a9987a;
-        position: fixed;
-        padding: 10px;
-    }
+    @import url("$lib/arrow.css");
 
-    .select-container {
-        width: 40%;
-    }
-        */
 </style>

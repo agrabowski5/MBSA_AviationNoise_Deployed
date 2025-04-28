@@ -2,9 +2,11 @@
 
     import Scrolly from "../panelComponents/Scrolly.svelte";
     import Slide1 from "../../slides/Slide1.svelte";
-    import Slide11 from "../../slides/Slide1.1.svelte";
-    import Slide12 from "../../slides/Slide1.2.svelte";
     import Slide2 from "../../slides/Slide2.svelte";
+    import Slide3 from "../../slides/Slide3.svelte";
+    import Slide4 from "../../slides/Slide4.svelte";
+    import Slide5 from "../../slides/Slide5.svelte";
+    import Slide6 from "../../slides/Slide6.svelte";
 
     import { tick } from "svelte";
     import { onMount } from 'svelte';
@@ -20,7 +22,6 @@
     $: if (value === 0) {
         resetScroll = false;
     }
-
 
     let container;
     // $: console.log({ value });
@@ -103,11 +104,13 @@
                 <p>{text}</p>
             </div>
         {/each} -->
-        <Slide1 active={isSlide1Active}/>
-        <Slide11 active={value === 1} bind:value={value}/>
-        <Slide12 active={value === 2} bind:value={value}/>
-        <Slide2 active={isSlide2Active} bind:municipalities={municipalities}
+        <Slide1 active={value === 0} bind:value={value}/>
+        <Slide2 active={value === 1} bind:value={value}/>
+        <Slide3 active={value === 2} bind:value={value}/>
+        <Slide4 active={isSlide2Active} bind:municipalities={municipalities}
                 bind:selectedMunicipality={selectedMunicipality}/>
+        <Slide5 active={value === 4} bind:value={value}/>
+        <Slide6 active={value === 5} bind:value={value}/>
     </Scrolly>
 </div>
 
