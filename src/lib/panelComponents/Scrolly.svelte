@@ -90,35 +90,53 @@
 </script>
 
 <div bind:this={container}>
-  <slot />
+  <div class="scroll-container">
+    <slot />
+  </div>
 </div>
 
 <style>
   div {
     position: relative;
-    padding-right: 4px; 
+    padding-right: 4px;
   }
 
- 
+  .scroll-container {
+    height: 100vh;
+    overflow-y: auto;
+    scroll-snap-type: y mandatory;
+  }
+
+  
+  :global(.scroll-container > *) {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  
   :global(*::-webkit-scrollbar) {
-    width: 6px; 
+    width: 6px;
     background-color: transparent;
   }
 
   :global(*::-webkit-scrollbar-thumb) {
-    background-color: #E2904A;
+    background-color: #B87A45;
     border-radius: 3px;
   }
 
   :global(*::-webkit-scrollbar-track) {
-    background-color: rgba(226, 144, 74, 0.1);
-    margin: 4px 0; 
+    background-color: rgba(184, 122, 69, 0.1); 
+    margin: 4px 0;
   }
 
-  /* Firefox */
+
   * {
     scrollbar-width: thin;
-    scrollbar-color: #E2904A transparent;
+    scrollbar-color: #B87A45 transparent;
   }
 </style>
 

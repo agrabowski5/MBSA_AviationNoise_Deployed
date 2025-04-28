@@ -125,8 +125,6 @@
     }
 
     .main-panel-container {
-        overflow-y: auto;
-        overflow-x: hidden;
         position: absolute;
         top: 0;
         left: 0;
@@ -136,6 +134,7 @@
         padding: 20px;
         color: #FFF5E6;
         font-family: 'Arial', sans-serif;
+        overflow: hidden;
     }
 
     .main-panel-container::-webkit-scrollbar {
