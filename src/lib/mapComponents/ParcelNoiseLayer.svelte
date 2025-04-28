@@ -401,45 +401,56 @@
 
         // Convert brush pixel coordinates to map coordinates
         const [[x0, y0], [x1, y1]] = event.selection;
-        const sw = map.unproject([x0, y0]); // Bottom-left corner
-        const ne = map.unproject([x1, y1]); // Top-right corner
-
-        console.log("Brushed Area:", sw, ne);
+        const sw = map.unproject([x0, y0]);
+        const ne = map.unproject([x1, y1]);
 
         // Process the selection
         const bounds = [sw, ne];
         selectParcels(bounds);
         
-        // Position the summary tooltip near the mouse position
+        // Position the summary tooltip with improved boundary checking
         if (event.sourceEvent) {
             const mouseX = event.sourceEvent.clientX;
             const mouseY = event.sourceEvent.clientY;
             
-            // Position tooltip to avoid falling off screen
-            const tooltip = d3.select("#summary-tooltip");
-            const windowWidth = window.innerWidth;
-            const windowHeight = window.innerHeight;
             
-            // Default position
-            let tooltipX = mouseX + 20;
-            let tooltipY = mouseY - 20;
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
             
-            // Ensure tooltip stays within viewport
-            if (tooltipX + 420 > windowWidth) {
-                tooltipX = mouseX - 440; // Position to left of cursor
+           
+            const tooltipWidth = 420;
+            const tooltipHeight = 500;
+            const padding = 80; 
+            
+           
+            let tooltipX = mouseX + padding;
+            let tooltipY = mouseY - tooltipHeight/2; 
+            
+           
+            if (tooltipX + tooltipWidth > viewportWidth - padding) {
+                tooltipX = mouseX - tooltipWidth - padding;
             }
             
-            if (tooltipY < 20) {
-                tooltipY = 20; // Ensure minimum distance from top
-            } else if (tooltipY + 500 > windowHeight) {
-                tooltipY = windowHeight - 520; // Keep from bottom edge
+           
+            if (tooltipY + tooltipHeight > viewportHeight - padding) {
+                tooltipY = viewportHeight - tooltipHeight - padding;
+            }
+            if (tooltipY < padding) {
+                tooltipY = padding;
             }
             
-            tooltip
+            
+            tooltipX = Math.max(padding, Math.min(viewportWidth - tooltipWidth - padding, tooltipX));
+            tooltipY = Math.max(padding, Math.min(viewportHeight - tooltipHeight - padding, tooltipY));
+            
+        
+            d3.select("#summary-tooltip")
                 .style("left", `${tooltipX}px`)
-                .style("right", "auto")
                 .style("top", `${tooltipY}px`)
-                .style("bottom", "auto");
+                .style("right", "auto")
+                .style("bottom", "auto")
+                .style("max-height", `${viewportHeight - (padding * 2)}px`)
+                .style("overflow-y", "auto"); 
         }
         
         // Clear the brush selection after processing
@@ -458,7 +469,7 @@ function selectParcels(bounds) {
     // Filter out layers that do not exist
     const validLayers = queryLayers.filter(layer => map.getLayer(layer));
 
-    // ✅ Debugging: Check layers being queried
+    
     console.log("Available layers before selection:", map.getStyle().layers.map(l => l.id));
     console.log("Querying layers:", validLayers);
 
