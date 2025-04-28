@@ -116,6 +116,20 @@
         }
     }
 
+    // Add this method to your component
+    export function zoomTo(center, zoom) {
+        console.log("Zooming map to:", center, zoom);
+        if (map) {
+            map.flyTo({
+                center: center,
+                zoom: zoom,
+                duration: 1500, // Animation duration in milliseconds
+                essential: true
+            });
+        } else {
+            console.error("Map not initialized yet");
+        }
+    }
 
 </script>
 

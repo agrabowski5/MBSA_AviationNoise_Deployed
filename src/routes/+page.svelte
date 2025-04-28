@@ -12,6 +12,7 @@
     mapboxgl.accessToken = "pk.eyJ1IjoiYWdyYWJvd3MiLCJhIjoiY205MXBkaTEyMDNobjJzcHdyNjczOHY1ZiJ9.YUk31iaej90fE7REWALCLQ"; // Andrew's Token which should be changed
 
     let baseMap;
+    let baseMapComponent;
     let stations = [];
     let parcelFiles = [];
     let zoningAndCensusFiles = [];
@@ -43,11 +44,18 @@
         selectedStations = [];
         resetScroll = true;
     }
+
+    function handleZoomTo(event) {
+        console.log("Zoom event received in page:", event.detail);
+        if (baseMapComponent) {
+            baseMapComponent.zoomTo(event.detail.center, event.detail.zoom);
+        }
+    }
 </script>
 
 <BaseMap
         class="baseMap"
-        bind:this={baseMap}
+        bind:this={baseMapComponent}
         bind:municipalities={municipalities}
         bind:selectedMunicipality={selectedMunicipality}
         bind:guidedMode={guidedMode}
@@ -74,6 +82,7 @@
                     bind:explorationMode={explorationMode}
                     bind:resetScroll={resetScroll}
                     bind:value={value}
+                    on:zoomTo={handleZoomTo}
             />
         </div> 
 {/key}

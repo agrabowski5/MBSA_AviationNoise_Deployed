@@ -11,6 +11,7 @@
 
     import { tick } from "svelte";
     import { onMount } from 'svelte';
+    import { createEventDispatcher } from 'svelte';
 
     let ready = false;
 
@@ -99,7 +100,14 @@
 
     $: console.log('Current slide index (value):', value);
 
+    // Add this function to handle zoom events
+    function handleZoomTo(event) {
+        console.log("Zoom event received:", event.detail);
+        // Forward the event to the parent component
+        dispatch('zoomTo', event.detail);
+    }
 
+    const dispatch = createEventDispatcher();
 
 </script>
 
@@ -115,7 +123,13 @@
         <Slide3 active={value === 2} bind:value={value}/>
         <Slide4 active={isSlide2Active} bind:municipalities={municipalities}
                 bind:selectedMunicipality={selectedMunicipality}/>
-        <Slide5 active={isSlide5Active} bind:value={value}/>
+        <Slide5 
+            active={isSlide5Active} 
+            bind:value={value} 
+            bind:municipalities={municipalities}
+            bind:selectedMunicipality={selectedMunicipality}
+            on:zoomTo={handleZoomTo}
+        />
         <Slide6 active={isSlide6Active} bind:value={value}/>
         <Slide7 active={isSlide7Active} bind:value={value}/>
     </Scrolly>
@@ -219,6 +233,5 @@
 
 </style>
 
-  
 
-  
+

@@ -1,5 +1,8 @@
 <script>
     import Select from 'svelte-select';
+    import { createEventDispatcher } from 'svelte';
+    
+    const dispatch = createEventDispatcher();
 
     export let active = false;
     export let municipalities = [];
@@ -13,17 +16,26 @@
     $: items = municipalities?.map(m => ({
         'value': m,
         'label': m.Name
-        // 'selectable': m.Selectable
     }));
 
     const searchable = true;
-
-/*
-    map.flyTo({
-        center: [-71.057690,42.301715],
-        zoom: 12
-    });
-*/
+    
+    // Simple function to zoom to Dorchester by dispatching an event
+    function zoomToDorchester() {
+        // This event will be captured in the parent component
+        dispatch('zoomTo', {
+            center: [-71.057690, 42.327715],
+            zoom: 13.5
+        });
+        
+        // Optionally select Boston in the dropdown if available
+        const boston = municipalities.find(m => 
+            m.Name.toLowerCase().includes('boston'));
+            
+        if (boston) {
+            selectedMunicipality = boston;
+        }
+    }
 </script>
 
 {#if (active)}
@@ -33,29 +45,38 @@
             Click on a parcel to look at the tooltip with more information about that parcel.
         </p>
         <br>
+        <button class="zoom-button" on:click={zoomToDorchester}>
+            🔍 Zoom to Dorchester
+        </button>
     </div>
 {/if}
 
 <style>
     @import url("$lib/global.css");
     @import url("$lib/slide.css");
-    /*
-    :global(.searchbar) {
-        z-index: 100;
-        font: 18px sans-serif;
-        font-family: 'Montserrat', sans-serif;
-        visibility: visible;
-        background-color: rgba(10, 0, 0, 0.4) !important;
-        backdrop-filter: blur(8px) !important;
-        border-radius: 10px;
-        width: 200px;
-        color: #a9987a;
-        position: fixed;
-        padding: 10px;
+    
+    .zoom-button {
+        background-color: #B87A45;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 16px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        margin-top: 10px;
     }
-
-    .select-container {
-        width: 40%;
+    
+    .zoom-button:hover {
+        background-color: #D89A65;
+        transform: translateY(-2px);
     }
-        */
+    
+    .zoom-button:active {
+        transform: translateY(0);
+    }
 </style>
