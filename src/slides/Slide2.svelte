@@ -27,7 +27,7 @@
             levels of aircraft noise, further exacerbating the health vulnerabilities faced by marginalized communities.
         </p>
         <br>
-        <img src="/images/demographics_health.png" alt="Demographics plot">
+        <img src="/images/demographics_health.png" alt="Demographics plot" width="90%" height="auto">
     </div>
 {/if}
 
