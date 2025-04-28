@@ -7,6 +7,7 @@
     import Slide4 from "../../slides/Slide4.svelte";
     import Slide5 from "../../slides/Slide5.svelte";
     import Slide6 from "../../slides/Slide6.svelte";
+    import Slide7 from "../../slides/Slide7.svelte";
 
     import { tick } from "svelte";
     import { onMount } from 'svelte';
@@ -76,6 +77,7 @@
    
     let isSlide5Active = 'value === 4';
     let isSlide6Active = 'value === 5';
+    let isSlide7Active = 'value === 6';
 
     // Function to scroll to a particular slide
     function scrollToSlide(slideIndex, callback) {
@@ -115,6 +117,7 @@
                 bind:selectedMunicipality={selectedMunicipality}/>
         <Slide5 active={isSlide5Active} bind:value={value}/>
         <Slide6 active={isSlide6Active} bind:value={value}/>
+        <Slide7 active={isSlide7Active} bind:value={value}/>
     </Scrolly>
 </div>
 
