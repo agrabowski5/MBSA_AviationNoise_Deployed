@@ -13,10 +13,15 @@
     $: items = municipalities?.map(m => ({
         'value': m,
         'label': m.Name
-        // 'selectable': m.Selectable
     }));
 
+    // Add this function to get the correct base path
+    function getBasePath() {
+        return import.meta.env.BASE_URL || '/';
+    }
+
     const searchable = true;
+    const basePath = getBasePath();
 </script>
 
 {#if (active)}
@@ -27,7 +32,7 @@
             levels of aircraft noise, further exacerbating the health vulnerabilities faced by marginalized communities.
         </p>
         <br>
-        <img src="/images/demographics_health.jpg" alt="Demographics plot" width="90%" height="auto">
+        <img src="{basePath}images/demographics_health.jpg" alt="Demographics plot" width="90%" height="auto">
     </div>
 {/if}
 
