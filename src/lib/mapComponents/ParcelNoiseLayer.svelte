@@ -410,6 +410,38 @@
         const bounds = [sw, ne];
         selectParcels(bounds);
         
+        // Position the summary tooltip near the mouse position
+        if (event.sourceEvent) {
+            const mouseX = event.sourceEvent.clientX;
+            const mouseY = event.sourceEvent.clientY;
+            
+            // Position tooltip to avoid falling off screen
+            const tooltip = d3.select("#summary-tooltip");
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+            
+            // Default position
+            let tooltipX = mouseX + 20;
+            let tooltipY = mouseY - 20;
+            
+            // Ensure tooltip stays within viewport
+            if (tooltipX + 420 > windowWidth) {
+                tooltipX = mouseX - 440; // Position to left of cursor
+            }
+            
+            if (tooltipY < 20) {
+                tooltipY = 20; // Ensure minimum distance from top
+            } else if (tooltipY + 500 > windowHeight) {
+                tooltipY = windowHeight - 520; // Keep from bottom edge
+            }
+            
+            tooltip
+                .style("left", `${tooltipX}px`)
+                .style("right", "auto")
+                .style("top", `${tooltipY}px`)
+                .style("bottom", "auto");
+        }
+        
         // Clear the brush selection after processing
         d3.brush().move(brushGroup, null);
     }
@@ -524,17 +556,56 @@ function calculateSummaryStatistics(selectedFeatures) {
     const avgNoiseLevel = totalNoise / count;
     const avgNoiseLabel = avgNoiseLevel > 0 ? `${avgNoiseLevel.toFixed(1)} dB` : 'No Data';
 
-    // Update the summary tooltip with all statistics
-    d3.select("#summary-tooltip")
+    // Get mouse position from the last brush event
+    const summaryTooltip = d3.select("#summary-tooltip");
+    
+    // Update the summary tooltip with all statistics and create space for scatterplot
+    summaryTooltip
         .style("opacity", 1)
         .html(`
-            <strong>Selected Parcels: ${count}</strong><br>
-            <strong>Avg Building Value:</strong> $${avgBuildingValue.toLocaleString()}<br>
-            <strong>Avg Land Value:</strong> $${avgLandValue.toLocaleString()}<br>
-            <strong>Avg Total Value:</strong> $${avgTotalValue.toLocaleString()}<br>
-            <strong>Avg Lot Size:</strong> ${avgLotSize.toLocaleString()} sq ft<br>
-            <strong>Avg Noise Level:</strong> ${avgNoiseLabel}
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="border-bottom: 1px solid #555; padding-bottom: 10px;">
+                    <h4 style="margin: 0 0 10px 0; font-size: 16px;">Selected Area Summary</h4>
+                    <p style="margin: 5px 0;"><strong>Selected Parcels:</strong> ${count}</p>
+                    <p style="margin: 5px 0;"><strong>Avg Building Value:</strong> $${avgBuildingValue.toLocaleString()}</p>
+                    <p style="margin: 5px 0;"><strong>Avg Land Value:</strong> $${avgLandValue.toLocaleString()}</p>
+                    <p style="margin: 5px 0;"><strong>Avg Total Value:</strong> $${avgTotalValue.toLocaleString()}</p>
+                    <p style="margin: 5px 0;"><strong>Avg Lot Size:</strong> ${avgLotSize.toLocaleString()} sq ft</p>
+                    <p style="margin: 5px 0;"><strong>Avg Noise Level:</strong> ${avgNoiseLabel}</p>
+                </div>
+                
+                <div id="scatterplot-container">
+                    <h4 style="margin: 0 0 10px 0; font-size: 16px;">Building Value vs. Noise Level</h4>
+                    <svg id="scatterplot" width="380" height="280"></svg>
+                </div>
+                
+                <button id="close-summary-btn" style="align-self: flex-end; background: #444; color: white; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer; font-size: 14px;">Close</button>
+            </div>
         `);
+        
+    // Add event listener to close button
+    setTimeout(() => {
+        const closeBtn = document.getElementById('close-summary-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                summaryTooltip.style("opacity", 0);
+                clearSelectedParcels();
+            });
+        }
+        
+        // Draw scatterplot inside the summary tooltip
+        if (count > 5) {
+            drawScatterplot(selectedFeatures);
+        } else {
+            d3.select("#scatterplot")
+                .append("text")
+                .attr("x", 190)
+                .attr("y", 140)
+                .attr("text-anchor", "middle")
+                .attr("fill", "white")
+                .text("Not enough data for analysis (need > 5 parcels)");
+        }
+    }, 10);
 }
 
 function highlightSelectedParcels(selectedFeatures) {
@@ -567,18 +638,6 @@ function highlightSelectedParcels(selectedFeatures) {
     
     // Calculate and display summary
     calculateSummaryStatistics(selectedFeatures);
-    
-    // Only show scatterplot for multi-select operations with enough data points
-    if (isMultiSelectActive && selectedFeatures.length > 5) {
-        console.log("Multi-select active with", selectedFeatures.length, "parcels - showing scatterplot");
-        showScatterplot = true;
-        setTimeout(() => {
-            drawScatterplot(selectedFeatures);
-        }, 10); // Small delay to ensure DOM elements are ready
-    } else {
-        console.log("Not showing scatterplot:", isMultiSelectActive, selectedFeatures.length);
-        showScatterplot = false;
-    }
 }
 
 function clearSelectedParcels() {
@@ -591,9 +650,6 @@ function clearSelectedParcels() {
         
         // Hide the summary tooltip
         d3.select("#summary-tooltip").style("opacity", 0);
-        
-        // Hide scatterplot
-        showScatterplot = false;
         
         // Reset the flag
         hasSelectedParcels = false;
@@ -690,104 +746,6 @@ function setupParcelClickHandler() {
     });
 }
 
-//Trying lasso select tool
-const lassoGroup = svg.append("g")
-    .attr("id", "lasso-group")
-    .style("display", "none");
-
-let lassoPoints = [];
-let isDrawingLasso = false;
-
-function enableFreeformLasso() {
-    lassoGroup.style("display", "block");
-    map.getCanvas().style.cursor = "crosshair";
-
-    // Disable map interactions while drawing
-    map.dragPan.disable();
-    map.doubleClickZoom.disable();
-    map.scrollZoom.disable();
-    map.boxZoom.disable();
-    map.keyboard.disable();
-
-    svg.on("mousedown", (event) => {
-        isDrawingLasso = true;
-        lassoPoints = [];
-        lassoGroup.selectAll("*").remove();
-    });
-
-    svg.on("mousemove", (event) => {
-        if (!isDrawingLasso) return;
-
-        const [x, y] = d3.pointer(event);
-        lassoPoints.push([x, y]);
-
-        const path = d3.line()(lassoPoints);
-        lassoGroup.selectAll("path").remove();
-        lassoGroup.append("path")
-            .attr("d", path)
-            .attr("fill", "rgba(0, 0, 255, 0.1)")
-            .attr("stroke", "blue")
-            .attr("stroke-width", 2);
-    });
-
-    svg.on("mouseup", () => {
-        if (!isDrawingLasso || lassoPoints.length < 3) return;
-
-        isDrawingLasso = false;
-        svg.on("mousedown", null);
-        svg.on("mousemove", null);
-        svg.on("mouseup", null);
-
-        // Close the polygon
-        lassoPoints.push(lassoPoints[0]);
-
-        // Convert screen points to map coordinates
-        const polygon = turf.polygon([lassoPoints.map(p => {
-            const lngLat = map.unproject(p);
-            return [lngLat.lng, lngLat.lat];
-        })]);
-
-        selectParcelsInPolygon(polygon);
-        lassoGroup.style("display", "none");
-
-        // ✅ Re-enable map interactions
-        map.dragPan.enable();
-        map.doubleClickZoom.enable();
-        map.scrollZoom.enable();
-        map.boxZoom.enable();
-        map.keyboard.enable();
-        map.getCanvas().style.cursor = "";
-    });
-}
-
-
-function selectParcelsInPolygon(polygon) {
-    const queryLayers = ['simplified-noise-layer'];
-    for (let i = 0; i < currentBatchIndex; i++) {
-        queryLayers.push(`parcels-${i}`);
-    }
-
-    const validLayers = queryLayers.filter(layer => map.getLayer(layer));
-    const features = map.queryRenderedFeatures({ layers: validLayers });
-
-    const selectedFeatures = features.filter(f => {
-        const turfFeature = turf.feature(f.geometry);
-        return turf.booleanIntersects(polygon, turfFeature);
-    });
-
-    if (selectedFeatures.length > 0) {
-        highlightSelectedParcels(selectedFeatures);
-    } else {
-        console.log("No parcels intersect the drawn lasso.");
-    }
-}
-
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'l' || e.key === 'L') {l
-        enableFreeformLasso();
-    }
-});
-
 function drawScatterplot(features) {
     console.log("Drawing scatterplot with", features.length, "features");
     
@@ -816,7 +774,6 @@ function drawScatterplot(features) {
 
     if (!data.length) {
         console.warn("No data available for scatterplot.");
-        showScatterplot = false;
         return;
     }
     
@@ -835,12 +792,8 @@ function drawScatterplot(features) {
     const svg = d3.select("#scatterplot"),
         width = +svg.attr("width"),
         height = +svg.attr("height"),
-        margin = { top: 30, right: 30, bottom: 50, left: 70 };
+        margin = { top: 20, right: 20, bottom: 40, left: 60 };
 
-    // Set visibility explicitly
-    showScatterplot = true;
-    console.log("Set showScatterplot to", showScatterplot);
-    
     // Make scale domains more sensible for your data
     const x = d3.scaleLinear()
         .domain([45, 70]) // Adjusted domain for noise levels (dB)
@@ -852,7 +805,7 @@ function drawScatterplot(features) {
 
     const r = d3.scaleSqrt()
         .domain([0, d3.max(data, d => d.lotSize)])
-        .range([3, 12]);
+        .range([3, 10]);
 
     // Add axes with better labels
     svg.append("g")
@@ -860,10 +813,9 @@ function drawScatterplot(features) {
         .call(d3.axisBottom(x))
         .append("text")
         .attr("x", width / 2)
-        .attr("y", 35) // Increased for better visibility
-        .attr("fill", "white") // Changed to white for dark background
-        .attr("font-weight", "bold")
-        .attr("font-size", "14px") // Increased size
+        .attr("y", 30) 
+        .attr("fill", "white")
+        .attr("font-size", "12px")
         .text("Noise Level (dB)");
 
     svg.append("g")
@@ -872,10 +824,9 @@ function drawScatterplot(features) {
         .append("text")
         .attr("transform", "rotate(-90)")
         .attr("x", -height / 2)
-        .attr("y", -45) // Moved further left
-        .attr("fill", "white") // Changed to white for dark background
-        .attr("font-weight", "bold")
-        .attr("font-size", "14px") // Increased size
+        .attr("y", -40)
+        .attr("fill", "white")
+        .attr("font-size", "12px")
         .text("Building Value (millions $)");
 
     // Add circles colored by noise category
@@ -924,56 +875,41 @@ function drawScatterplot(features) {
         // Add correlation coefficient and trend information
         const correlation = calculateCorrelation(xValues, yValues);
         
-        // Add a more descriptive correlation text
-        let correlationText = `Correlation: ${correlation.toFixed(2)}`;
-        if (correlation < -0.5) {
-            correlationText += " (Strong Negative)";
-        } else if (correlation < -0.3) {
-            correlationText += " (Moderate Negative)";
-        } else if (correlation < 0) {
-            correlationText += " (Weak Negative)";
-        } else if (correlation < 0.3) {
-            correlationText += " (Weak Positive)";
-        } else if (correlation < 0.5) {
-            correlationText += " (Moderate Positive)";
-        } else {
-            correlationText += " (Strong Positive)";
-        }
-        
+        // Add correlation text (shortened for space)
         svg.append("text")
-            .attr("x", margin.left + 10)
-            .attr("y", margin.top)
+            .attr("x", margin.left + 5)
+            .attr("y", margin.top + 15)
             .attr("fill", "white")
-            .attr("font-size", "12px")
-            .text(correlationText);
+            .attr("font-size", "11px")
+            .text(`Correlation: ${correlation.toFixed(2)}`);
             
         // Add trend description
         svg.append("text")
-            .attr("x", margin.left + 10)
-            .attr("y", margin.top + 20)
+            .attr("x", width - margin.right - 100)
+            .attr("y", margin.top + 15)
             .attr("fill", slope < 0 ? "#FF9999" : "#99FF99") // Red for negative, green for positive
-            .attr("font-size", "12px")
-            .text(`Trend: ${slope < 0 ? "Value decreases" : "Value increases"} with noise`);
+            .attr("font-size", "11px")
+            .text(slope < 0 ? "Value ↓ with noise" : "Value ↑ with noise");
     }
     
-    // Add legend with better styling
+    // Add compact legend
     const legend = svg.append("g")
-        .attr("transform", `translate(${width - margin.right - 120}, ${margin.top + 5})`);
+        .attr("transform", `translate(${width - margin.right - 100}, ${margin.top + 30})`);
         
     Object.entries(noiseLevelMapping).forEach(([color, level], i) => {
         legend.append("rect")
             .attr("x", 0)
-            .attr("y", i * 20)
-            .attr("width", 15)
-            .attr("height", 15)
+            .attr("y", i * 18)
+            .attr("width", 12)
+            .attr("height", 12)
             .attr("fill", colorMapping[color])
             .attr("stroke", "white")
             .attr("stroke-width", 0.5);
             
         legend.append("text")
-            .attr("x", 20)
-            .attr("y", i * 20 + 12)
-            .attr("font-size", "11px")
+            .attr("x", 16)
+            .attr("y", i * 18 + 10)
+            .attr("font-size", "10px")
             .attr("fill", "white")
             .text(level);
     });
@@ -1017,9 +953,6 @@ function calculateCorrelation(xValues, yValues) {
     });
 </script>
 
-<!-- Add this title element at the top of your component, before any existing HTML -->
-<div class="page-title">Aviation Noise's Effect on Housing</div>
-
 <div class="legend">
     <h3>Noise Impact Levels</h3>
     <div class="legend-item">
@@ -1042,61 +975,21 @@ function calculateCorrelation(xValues, yValues) {
 
 <div id="summary-tooltip" style="
     position: absolute;
-    bottom: 55px; /* Move above the multi-select-tip */
+    bottom: 55px; /* Positioned above the multi-select-tip */
     right: 10px;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(25, 25, 25, 0.95);
     color: white;
-    padding: 10px;
-    border-radius: 5px;
+    padding: 15px;
+    border-radius: 8px;
     font-size: 14px;
     display: inline-block;
     opacity: 0;
-"></div>
-
-<div id="tooltip" style="
-    position: absolute;
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 10px;
-    border-radius: 5px;
-    font-size: 14px;
-    pointer-events: none;
-    z-index: 200;
-    opacity: 0;
+    max-width: 420px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
+    border: 1px solid #555;
+    z-index: 100;
     transition: opacity 0.2s;
 "></div>
-
-<!-- Fix the scatterplot container to ensure it's always in the DOM -->
-<div id="scatterplot-container" style="
-    position: absolute; 
-    top: 80px; 
-    left: 10px; 
-    width: 400px; 
-    height: 400px; 
-    background: rgba(50, 50, 50, 0.95); 
-    color: white; 
-    border: 1px solid #555; 
-    border-radius: 8px; 
-    overflow: hidden; 
-    z-index: 10; 
-    padding: 10px; 
-    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-    display: {showScatterplot ? 'block' : 'none'};
-">
-  <h4 style="margin: 0 0 10px; font-size: 16px; border-bottom: 1px solid #777; padding-bottom: 5px;">
-    Building Value vs Noise Level Analysis
-  </h4>
-  <p style="margin: 0 0 10px; font-size: 12px;">
-    Selected {#if hasSelectedParcels && map.getSource("selected-parcels")}
-      {map.getSource("selected-parcels")._data.features.length}
-    {:else}
-      0
-    {/if} parcels
-  </p>
-  <svg id="scatterplot" width="380" height="350"></svg>
-  <button style="position: absolute; top: 10px; right: 10px; background: transparent; color: white; border: none; font-size: 16px; cursor: pointer;" 
-    on:click={() => { showScatterplot = false; }}>×</button>
-</div>
 
 <div class="multi-select-tip">
     <p><strong>Tip:</strong> Hold <kbd>Alt</kbd> (Windows) or <kbd>Option</kbd> (Mac) to activate multi-select tool</p>
@@ -1203,19 +1096,20 @@ function calculateCorrelation(xValues, yValues) {
         border-left-color: rgba(25, 25, 25, 0.95) !important;
     }
 
-    /* Update the legend styling to be darker */
+    /* Update the legend styling to be in the top-right */
     .legend {
         position: absolute;
-        bottom: 25px;
-        left: 10px;
-        background: rgba(50, 50, 50, 0.95); /* Much darker background */
-        color: white; /* White text for contrast */
+        top: 10px; /* Changed from bottom: 25px */
+        right: 10px; /* Changed from left: 10px */
+        background: rgba(50, 50, 50, 0.95);
+        color: white;
         padding: 10px;
         border-radius: 5px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5); /* Stronger shadow */
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
         font-size: 14px;
         font-family: Arial, sans-serif;
         border: 1px solid #555;
+        z-index: 100; /* Added to ensure it appears above other elements */
     }
 
     .legend h3 {
