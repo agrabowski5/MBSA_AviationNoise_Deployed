@@ -10,18 +10,26 @@
 h1 {
     font-weight: normal;
     font-size: 2em;
+    color: #B87A45;
+    margin-bottom: 0.5em;
 }
 
 h2 {
     font-weight: normal;
     font-size: 1.5em;
+    color: #A68B76;
+    margin-bottom: 0.4em;
 }
 
 h3 {
     font-weight: normal;
     font-size: 1.17em;
+    color: #967F6B;
+    margin-bottom: 0.3em;
 }
 
 p {
     font-size: 1.17em;
+    color: #F5EBE0;
+    line-height: 1.5;
 }

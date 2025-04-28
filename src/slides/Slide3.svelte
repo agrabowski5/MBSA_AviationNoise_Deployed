@@ -31,7 +31,7 @@
             when compared with their White counterparts.
         </p>
         <br>
-        <div class="scroll-indicator"></div>
+
 </div>
 
 <!-- <div class="footnotes">

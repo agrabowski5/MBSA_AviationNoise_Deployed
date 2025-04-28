@@ -58,11 +58,11 @@
 
 {#key explorationMode}
         <div class="panel-container">
-            <div class="progress-bar" style="position: absolute;">
+            <!-- <div class="progress-bar" style="position: absolute;">
                 {#each [0, 1, 2, 3, 4, 5, 6, 7, 8] as slideIndex}
                     <div class="circle {value === slideIndex ? 'active' : ''}"></div>
                 {/each}
-            </div>
+            </div> -->
             <PanelComponent
                     bind:municipalities={municipalities}
                     bind:stations={stations}

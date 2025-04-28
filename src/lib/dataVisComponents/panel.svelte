@@ -73,6 +73,10 @@
         scrollToSlide(value_scroll_station)
     }
 
+   
+    let isSlide5Active = 'value === 4';
+    let isSlide6Active = 'value === 5';
+
     // Function to scroll to a particular slide
     function scrollToSlide(slideIndex, callback) {
         console.log("Scrolling to slide called", slideIndex);
@@ -109,8 +113,8 @@
         <Slide3 active={value === 2} bind:value={value}/>
         <Slide4 active={isSlide2Active} bind:municipalities={municipalities}
                 bind:selectedMunicipality={selectedMunicipality}/>
-        <Slide5 active={value === 4} bind:value={value}/>
-        <Slide6 active={value === 5} bind:value={value}/>
+        <Slide5 active={isSlide5Active} bind:value={value}/>
+        <Slide6 active={isSlide6Active} bind:value={value}/>
     </Scrolly>
 </div>
 
@@ -121,23 +125,81 @@
     }
 
     .main-panel-container {
-        overflow-y: auto; /* Allows vertical scrolling */
-        overflow-x: hidden; /* Disables horizontal scrolling */
+        overflow-y: auto;
+        overflow-x: hidden;
         position: absolute;
         top: 0;
         left: 0;
         width: 40%;
         height: 100%;
-        background-color: rgba(0, 0, 0, 0.8);
+        background-color: transparent;
         padding: 20px;
-        color: #9f9090;
-        /*backdrop-filter: blur(8px);*/
+        color: #FFF5E6;
+        font-family: 'Arial', sans-serif;
     }
 
     .main-panel-container::-webkit-scrollbar {
-        display: none;
+        width: 8px;
+        background-color: transparent;
     }
 
+    .main-panel-container::-webkit-scrollbar-thumb {
+        background-color: #E2904A;
+        border-radius: 4px;
+    }
+
+    .main-panel-container::-webkit-scrollbar-track {
+        background-color: rgba(226, 144, 74, 0.1);
+    }
+
+   
+    :global(.main-panel-container > div > div) {
+        background-color: rgba(44, 29, 14, 0.4);
+        backdrop-filter: blur(4px);
+        margin: 10px;
+        padding: 12px 16px;
+        border-radius: 6px;
+        position: relative;
+        border: 1px solid rgba(226, 144, 74, 0.6);
+        box-shadow: 
+            0 0 15px rgba(226, 144, 74, 0.1),
+            inset 0 0 20px rgba(226, 144, 74, 0.05);
+    }
+
+  
+    :global(.main-panel-container > div > div)::before,
+    :global(.main-panel-container > div > div)::after {
+        content: '';
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        border: 1px solid rgba(226, 144, 74, 0.8);
+    }
+
+    :global(.main-panel-container > div > div)::before {
+        top: -1px;
+        left: -1px;
+        border-right: none;
+        border-bottom: none;
+        border-radius: 6px 0 0 0;
+    }
+
+    :global(.main-panel-container > div > div)::after {
+        bottom: -1px;
+        right: -1px;
+        border-left: none;
+        border-top: none;
+        border-radius: 0 0 6px 0;
+    }
+
+    
+    :global(.main-panel-container > div > div):hover {
+        background-color: rgba(44, 29, 14, 0.5);
+        box-shadow: 
+            0 0 20px rgba(226, 144, 74, 0.15),
+            inset 0 0 25px rgba(226, 144, 74, 0.08);
+        transition: all 0.3s ease;
+    }
 
     /* .step {
 		height: 80vh;
@@ -154,5 +216,7 @@
 	} */
 
 </style>
+
+  
 
   

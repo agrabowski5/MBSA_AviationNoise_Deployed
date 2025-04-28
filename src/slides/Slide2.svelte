@@ -28,7 +28,7 @@
         increase in blood pressure with increases in nighttime aircraft noise
     </p>
     <br>
-    <div class="scroll-indicator"></div>
+   
 </div>
 
 <style>
