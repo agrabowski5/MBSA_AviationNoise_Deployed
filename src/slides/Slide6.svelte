@@ -25,7 +25,7 @@
     function zoomToEastBoston() {
         // This event will be captured in the parent component
         dispatch('zoomTo', {
-            center: [-70.99832, 42.37512],
+            center: [-71.05832, 42.37512],
             zoom: 13.5
         });
         
