@@ -82,90 +82,60 @@ export const flightRoutes = {
   loganToGloucester: {
     arrival: [loganAirport], // Starting at the airport
     
-    // Many points for ultra-smooth animation
+    // Updated points for ultra-smooth animation through the Northeast point
     departure: [
-      loganAirport,           // Starting at Logan
-      [-71.0075, 42.3670],    // Immediate takeoff roll
-      [-71.0055, 42.3690],    // Lifting off
-      [-71.0035, 42.3710],    // Initial climb
-      [-71.0015, 42.3730],    // Continuing climb
-      [-70.9995, 42.3750],    // Banking slightly northeast
-      [-70.9975, 42.3780],    // Climbing over water
-      [-70.9955, 42.3810],    // Establishing climb path
-      [-70.9935, 42.3840],    // Steady climb
-      [-70.9915, 42.3870],    // Climbing through 500ft
-      [-70.9895, 42.3900],    // Accelerating
-      [-70.9875, 42.3930],    // Banking more northeast
-      [-70.9855, 42.3960],    // Climbing through 1000ft
-      [-70.9835, 42.3990],    // Continuing climb
-      [-70.9815, 42.4020],    // Setting course
-      [-70.9795, 42.4050],    // Stabilizing heading
-      [-70.9775, 42.4080],    // Climbing through 1500ft
-      [-70.9755, 42.4110],    // Steady climb
-      [-70.9735, 42.4140],    // Setting cruise climb
-      [-70.9715, 42.4170],    // Banking northeast
-      [-70.9695, 42.4200],    // Continuing climb
-      [-70.9675, 42.4230],    // Steady northeast course
-      [-70.9655, 42.4260],    // Climbing through 2000ft
-      [-70.9635, 42.4290],    // Level acceleration
-      [-70.9615, 42.4320],    // Setting cruise speed
-      [-70.9595, 42.4350],    // Maintaining course
-      [-70.9575, 42.4380],    // Climbing through 2500ft
-      [-70.9550, 42.4410],    // Steady climb
-      [-70.9525, 42.4440],    // Approaching cruise altitude
-      [-70.9500, 42.4470],    // Final climb
-      [-70.9475, 42.4500],    // Reaching cruise altitude
-      [-70.9450, 42.4530],    // Steady cruise
-      [-70.9425, 42.4560],    // Maintaining northeast course
-      [-70.9400, 42.4590],    // Cruising
-      [-70.9375, 42.4620],    // Steady flight
-      [-70.9350, 42.4650],    // Continuing northeast
-      [-70.9325, 42.4680],    // Maintaining altitude
-      [-70.9300, 42.4710],    // Following coastal route
-      [-70.9270, 42.4740],    // Flying over coastline
-      [-70.9240, 42.4770],    // Steady course
-      [-70.9210, 42.4800],    // Maintaining altitude
-      [-70.9180, 42.4830],    // Cruising over ocean
-      [-70.9150, 42.4860],    // Following shore
-      [-70.9120, 42.4890],    // Steady northeast heading
-      [-70.9090, 42.4920],    // Continuing on course
-      [-70.9060, 42.4950],    // Maintaining cruise altitude
-      [-70.9030, 42.4980],    // Beginning to turn more northerly
-      [-70.9000, 42.5010],    // Adjusting course
-      [-70.8970, 42.5040],    // Flying north-northeast
-      [-70.8940, 42.5070],    // Maintaining heading
-      [-70.8910, 42.5100],    // Beginning descent
-      [-70.8880, 42.5130],    // Initial descent
-      [-70.8850, 42.5160],    // Descending through 2500ft
-      [-70.8820, 42.5190],    // Continuing descent
-      [-70.8790, 42.5220],    // Descending through 2000ft
-      [-70.8760, 42.5250],    // Steady descent
-      [-70.8730, 42.5280],    // Approaching Cape Ann area
-      [-70.8700, 42.5310],    // Descending through 1500ft
-      [-70.8670, 42.5340],    // Setting up approach
-      [-70.8640, 42.5370],    // Adjusting for final approach
-      [-70.8610, 42.5400],    // Descending through 1000ft
-      [-70.8580, 42.5430],    // Final approach
-      [-70.8550, 42.5460],    // Short final
-      [-70.8520, 42.5490],    // Descending through 500ft
-      [-70.8490, 42.5520],    // Final descent
-      [-70.8460, 42.5550],    // Approaching destination
-      [-70.8430, 42.5580],    // Very close
-      [-70.8400, 42.5610],    // Almost there
-      [-70.8370, 42.5640],    // Final approach fix
-      [-70.8340, 42.5670],    // Touch down
-      [-70.8310, 42.5700],    // Rolling out
-      [-70.8280, 42.5730],    // Slowing down
-      [-70.8250, 42.5760],    // Approaching final position
-      [-70.8220, 42.5790],    // Taxiing
-      [-70.8190, 42.5820],    // Final approach
-      [-70.8160, 42.5850],    // Nearly there
-      [-70.8130, 42.5880],    // Last segment
-      [-70.8100, 42.5910],    // Final approach
-      [-70.8070, 42.5940],    // Almost at destination
-      [-70.8040, 42.5970],    // Last stretch
-      [-70.8010, 42.6000],    // Final segment
-      [-70.859136, 42.603925] // Final destination (Gloucester/Cape Ann)
+      [-71.0096, 42.3656],          // Logan Airport (starting point)
+  [-71.0077901, 42.3694517],
+  [-71.0059801, 42.3733034],
+  [-71.0041702, 42.3771551],
+  [-71.0023602, 42.3810068],
+  [-71.0005503, 42.3848585],
+  [-70.9987404, 42.3887102],
+  [-70.9969304, 42.3925619],
+  [-70.9951205, 42.3964136],
+  [-70.993781, 42.399270],       // Exact Northeast point (target)
+  [-70.9919730, 42.4031241],
+  [-70.9901651, 42.4069782],
+  [-70.9883571, 42.4108323],
+  [-70.9865492, 42.4146864],
+  [-70.9847412, 42.4185405],
+  [-70.9829333, 42.4223946],
+  [-70.9811253, 42.4262487],
+  [-70.9793174, 42.4301028],
+  [-70.9775094, 42.4339569],
+  [-70.9757015, 42.4378110],
+  [-70.9738935, 42.4416651],
+  [-70.9720856, 42.4455192],
+  [-70.9702776, 42.4493733],
+  [-70.9684697, 42.4532274],
+  [-70.9666617, 42.4570815],
+  [-70.9648538, 42.4609356],
+  [-70.9630458, 42.4647897],
+  [-70.9612379, 42.4686438],
+  [-70.9594299, 42.4724979],
+  [-70.9576220, 42.4763520],
+  [-70.9558140, 42.4802061],
+  [-70.9540061, 42.4840602],
+  [-70.9521981, 42.4879143],
+  [-70.9503902, 42.4917684],
+  [-70.9485822, 42.4956225],
+  [-70.9467743, 42.4994766],
+  [-70.9449663, 42.5033307],
+  [-70.9431584, 42.5071848],
+  [-70.9413504, 42.5110389],
+  [-70.9395425, 42.5148930],
+  [-70.9377345, 42.5187471],
+  [-70.9359266, 42.5226012],
+  [-70.9341186, 42.5264553],
+  [-70.9323107, 42.5303094],
+  [-70.9305027, 42.5341635],
+  [-70.9286948, 42.5380176],
+  [-70.9268868, 42.5418717],
+  [-70.9250789, 42.5457258],
+  [-70.9232709, 42.5495799],
+  [-70.9214630, 42.5534340],
+  [-70.9196550, 42.5572881],
+  [-70.9178471, 42.5611422]
     ]
   }
 };
