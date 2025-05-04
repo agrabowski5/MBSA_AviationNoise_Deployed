@@ -71,6 +71,119 @@
     const baseCenter = [-71.0589, 42.3601]; // Boston city center coordinates
     const baseZoom = 12; // More zoomed in
 
+    // Logan Airport coordinates
+    const loganAirport = [-71.0096, 42.3656];
+    
+    // Flight paths emanating from Logan Airport to specified destinations
+    const flightDestinations = [
+        { name: "Northeast", coordinates: [-70.991781, 42.399270] },
+        { name: "Southeast", coordinates: [-70.979651, 42.347272] },
+        { name: "Southwest1", coordinates: [-71.022613, 42.329350] },
+        { name: "Southwest2", coordinates: [-71.054128, 42.339772] },
+        { name: "Northwest", coordinates: [-71.041747, 42.382716] }
+    ];
+    
+    // Function to create an intermediate point at a specified distance ratio
+    function createIntermediatePoint(start, end, ratio) {
+        return [
+            start[0] + (end[0] - start[0]) * ratio,
+            start[1] + (end[1] - start[1]) * ratio
+        ];
+    }
+    
+    // Function to extend a line beyond its destination
+    function extendLine(start, end, factor = 5) {
+        // Calculate the direction vector
+        const dx = end[0] - start[0];
+        const dy = end[1] - start[1];
+        
+        // Extend the line by the factor
+        return [
+            end[0] + dx * factor,
+            end[1] + dy * factor
+        ];
+    }
+    
+    // Create extended flight paths, starting a bit away from the airport
+    const extendedFlightPaths = flightDestinations.map(dest => {
+        // Create point 15% of the way from airport to destination
+        const startPoint = createIntermediatePoint(loganAirport, dest.coordinates, 0.15);
+        // Extend the line beyond the destination
+        const extendedPoint = extendLine(loganAirport, dest.coordinates);
+        
+        return {
+            name: dest.name,
+            path: [startPoint, dest.coordinates, extendedPoint]
+        };
+    });
+    
+    // Always show flight paths (removed toggle)
+    let showFlightPaths = true;
+    
+    // Function to add flight paths to the map
+    function addFlightPaths() {
+        if (!map) return;
+        
+        // Remove existing flight path layers
+        if (map.getLayer('flight-paths')) {
+            map.removeLayer('flight-paths');
+        }
+        if (map.getSource('flight-paths-source')) {
+            map.removeSource('flight-paths-source');
+        }
+        
+        // Create GeoJSON features for flight paths
+        const flightPathFeatures = extendedFlightPaths.map(route => ({
+            type: 'Feature',
+            properties: { name: route.name },
+            geometry: {
+                type: 'LineString',
+                coordinates: route.path
+            }
+        }));
+        
+        // Add source for flight paths
+        map.addSource('flight-paths-source', {
+            type: 'geojson',
+            data: {
+                type: 'FeatureCollection',
+                features: flightPathFeatures
+            }
+        });
+        
+        // Add dotted line layer
+        map.addLayer({
+            id: 'flight-paths',
+            type: 'line',
+            source: 'flight-paths-source',
+            layout: {
+                'line-join': 'round',
+                'line-cap': 'round',
+                'visibility': 'visible' // Always visible
+            },
+            paint: {
+                'line-color': '#ffffff',
+                'line-width': 1.5,
+                'line-opacity': 0.7,
+                'line-dasharray': [2, 2] // Dotted line effect
+            }
+        });
+        
+    
+        
+        map.addLayer({
+            id: 'airport-marker',
+            type: 'circle',
+            source: 'airport-source',
+            paint: {
+                'circle-radius': 5,
+                'circle-color': '#ffffff',
+                'circle-stroke-width': 1,
+                'circle-stroke-color': '#B87A45'
+            }
+        });
+    }
+    
     onMount(async () => {
         map = new mapboxgl.Map({
             container: 'map',
@@ -82,7 +195,9 @@
         });
 
         await new Promise(resolve => map.on("load", resolve));
-
+        
+        // Add flight paths after map loads
+        addFlightPaths();
     })
 
     $: map?.on("move", evt => mapViewChanged++);
