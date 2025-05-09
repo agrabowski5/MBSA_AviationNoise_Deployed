@@ -1,7 +1,6 @@
 <script>
     import Select from 'svelte-select';
 
-    export let active = false;
     export let municipalities = [];
     export let selectedMunicipality = {};
     let input = "";
@@ -20,16 +19,14 @@
 
 </script>
 
-{#if (active)}
-    <div class="slide">
-        <h1>Explore on your own!</h1>
-        <p>
-            Scroll to any part of Boston to see the correlation between aviation noise and 
-            housing data.
-        </p>
-        <br>
-    </div>
-{/if}
+<div class="slide">
+    <h1>Explore on your own!</h1>
+    <p>
+        Scroll to any part of Boston to see the correlation between aviation noise and 
+        housing data.
+    </p>
+    <br>
+</div>
 
 <style>
     @import url("$lib/global.css");
