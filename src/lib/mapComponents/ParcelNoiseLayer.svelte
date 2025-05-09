@@ -949,15 +949,99 @@ function calculateCorrelation(xValues, yValues) {
         "Yellow": "Low-Medium Noise: 45 - 50 dB"
     };
 
+    // Add this function to set up hover effects for parcels
+    function setupParcelHoverEffects() {
+        // Add a source for the hovered parcel
+        map.addSource("hovered-parcel", {
+            type: "geojson",
+            data: {
+                type: "FeatureCollection",
+                features: []
+            }
+        });
+        
+        // Add a layer to display the hovered parcel
+        map.addLayer({
+            id: "hovered-parcel-layer",
+            type: "line",
+            source: "hovered-parcel",
+            paint: {
+                "line-color": "#ffffff",
+                "line-width": 2,
+                "line-opacity": 0.9
+            }
+        });
+        
+        // Set up mousemove event to highlight parcels on hover
+        map.on('mousemove', (e) => {
+            // Query both simplified and detailed layers
+            const layers = ['simplified-noise-layer'];
+            
+            // Add all detail layers that might exist
+            for (let i = 0; i < currentBatchIndex; i++) {
+                layers.push(`parcels-${i}`);
+            }
+            
+            // Find the features at hover point from all layers
+            const features = map.queryRenderedFeatures(e.point, {
+                layers: layers.filter(layer => map.getLayer(layer))
+            });
+            
+            // Change cursor style
+            map.getCanvas().style.cursor = features.length ? 'pointer' : '';
+            
+            // Update the hovered-parcel source with the first found feature or empty if none found
+            if (features.length) {
+                map.getSource("hovered-parcel").setData({
+                    type: "FeatureCollection",
+                    features: [features[0]]
+                });
+                
+                // Get noise level for tooltip
+                const noiseColor = features[0].properties.noiseColor;
+                const noiseLevel = noiseLevelMapping[noiseColor] || "Unknown Noise Level";
+                
+                // Show tooltip with noise level
+                d3.select("#tooltip")
+                    .style("left", `${e.originalEvent.clientX + 10}px`)
+                    .style("top", `${e.originalEvent.clientY + 10}px`)
+                    .style("opacity", 1)
+                    .html(`<strong>Noise Level:</strong> ${noiseLevel}`);
+            } else {
+                // Clear hover highlighting
+                map.getSource("hovered-parcel").setData({
+                    type: "FeatureCollection",
+                    features: []
+                });
+                
+                // Hide tooltip
+                d3.select("#tooltip").style("opacity", 0);
+            }
+        });
+        
+        // Clear the highlight when mouse leaves the map
+        map.on('mouseout', () => {
+            map.getSource("hovered-parcel").setData({
+                type: "FeatureCollection",
+                features: []
+            });
+            
+            // Hide tooltip
+            d3.select("#tooltip").style("opacity", 0);
+        });
+    }
+
     onMount(() => {
         if (map) {
             if (map.loaded()) {
                 initializeLoading();
-                setupKeyboardHandlers(); // Add this line
+                setupKeyboardHandlers();
+                setupParcelHoverEffects(); // Add this line
             } else {
                 map.on('load', () => {
                     initializeLoading();
-                    setupKeyboardHandlers(); // Add this line
+                    setupKeyboardHandlers();
+                    setupParcelHoverEffects(); // Add this line
                 });
             }
         }
@@ -1000,6 +1084,21 @@ function calculateCorrelation(xValues, yValues) {
     border: 1px solid #555;
     z-index: 100;
     transition: opacity 0.2s;
+"></div>
+
+<div id="tooltip" style="
+    position: absolute;
+    background: rgba(25, 25, 25, 0.9);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 200;
+    transition: opacity 0.2s;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    border: 1px solid #555;
 "></div>
 
 <div class="multi-select-tip">
