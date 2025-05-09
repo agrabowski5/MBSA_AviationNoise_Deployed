@@ -4,7 +4,6 @@
     
     const dispatch = createEventDispatcher();
 
-    export let active = false;
     export let municipalities = [];
     export let selectedMunicipality = {};
     let input = "";
@@ -38,18 +37,16 @@
     }
 </script>
 
-{#if (active)}
-    <div class="slide">
-        <h1>Dorchester is a neighborhood where about 35% of identify as BIPOC</h1>
-        <p>
-            Click on a parcel to look at the tooltip with more information about that parcel.
-        </p>
-        <br>
-        <button class="zoom-button" on:click={zoomToDorchester}>
-            🔍 Zoom to Dorchester
-        </button>
-    </div>
-{/if}
+<div class="slide">
+    <h1>Dorchester is a neighborhood where about 35% of identify as BIPOC</h1>
+    <p>
+        Click on a parcel to look at the tooltip with more information about that parcel.
+    </p>
+    <br>
+    <button class="zoom-button" on:click={zoomToDorchester}>
+        🔍 Zoom to Dorchester
+    </button>
+</div>
 
 <style>
     @import url("$lib/global.css");

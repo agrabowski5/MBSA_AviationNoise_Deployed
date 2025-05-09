@@ -8,6 +8,7 @@
     import Slide5 from "../../slides/Slide5.svelte";
     import Slide6 from "../../slides/Slide6.svelte";
     import Slide7 from "../../slides/Slide7.svelte";
+    import SlideDummy from "../../slides/SlideDummy.svelte";
 
     import { tick } from "svelte";
     import { onMount } from 'svelte';
@@ -17,8 +18,6 @@
 
     export let value;
     export let resetScroll;
-    export let municipalities;
-    export let selectedMunicipality;
 
     $: if (value === 0) {
         resetScroll = false;
@@ -32,12 +31,6 @@
         }
     });
 
-    // Default to true to show Slide2 initially
-    let isSlide2Active = 'value === 3';
-    let isSlide1Active = 'value === 0';
-    let isSlide5Active = 'value === 4';
-    let isSlide6Active = 'value === 5';
-    let isSlide7Active = 'value === 6';
 
     $: console.log('Current slide index (value):', value);
 
@@ -55,24 +48,21 @@
 <div class="main-panel-container">
     <Scrolly bind:this={scrollyComponent} bind:value={value}> <!-- 3. This is what updates value -->
         <Slide1 active={value === 0} bind:value={value}/>
-        <Slide2 active={value === 1} bind:value={value}/>
-        <Slide3 active={value === 2} bind:value={value}/>
-        <Slide4 active={isSlide2Active} bind:municipalities={municipalities}
-                bind:selectedMunicipality={selectedMunicipality}/>
+        <SlideDummy active={value === 1} bind:value={value}/>
+        <Slide2 active={value === 2} bind:value={value}/>
+        <Slide3 active={value === 3} bind:value={value}/>
+        <Slide4 active={value === 4} bind:value={value}/>
         <Slide5 
-            active={isSlide5Active} 
+            active={value === 5} 
             bind:value={value} 
-            bind:municipalities={municipalities}
-            bind:selectedMunicipality={selectedMunicipality}
             on:zoomTo={handleZoomTo}
         />
         <Slide6 
-            active={isSlide6Active} 
-            bind:municipalities={municipalities}
-            bind:selectedMunicipality={selectedMunicipality} 
+            active={value === 6} 
+            bind:value={value} 
             on:zoomTo={handleZoomTo} 
         />
-        <Slide7 active={isSlide7Active} bind:value={value}/>
+        <Slide7 active={value === 7} bind:value={value}/>
     </Scrolly>
 </div>
 
