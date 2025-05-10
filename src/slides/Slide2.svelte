@@ -28,11 +28,22 @@
         increase in blood pressure with increases in nighttime aircraft noise
     </p>
     <br>
-   
+   <div class="citation">
+    Source: HYENA Study (Jarup et al., 2008), *European Heart Journal*
+</div>
+
 </div>
 
 <style>
     @import url("$lib/slide.css");
     @import url("$lib/arrow.css");
+    .citation {
+    font-size: 0.75rem;
+    color: #666;
+    margin-top: 2rem;
+    text-align: right;
+    font-style: italic;
+}
+
 
 </style>

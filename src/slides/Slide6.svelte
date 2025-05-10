@@ -39,36 +39,18 @@
 </script>
 
 <div class="slide">
-    <h1>This is East Boston. Let's say you wanted to move to this neighborhood. What is the tradeoff you may have
-        to make regarding house prices and the level of aircraft noise you may have to face?</h1>
-    
-    <div class="steps-container">
+    <h1>Let's say you wanted to move to a neighborhood in East Boston. What is the tradeoff you may have
+        to make regarding house prices and the level of aircraft noise?</h1>
         <div class="step">
             <span class="step-number">1</span>
-            <p>Hold the Alt key (Windows) or Option key (Mac) to activate the multi-select tool.</p>
+            <p>Hold the Alt key (Windows) or Option key (Mac) to activate the multi-select tool and drag your cursor 
+            from the center outward to form a rectangle</p>
         </div>
-        
         <div class="step">
             <span class="step-number">2</span>
-            <p>Drag your cursor from the center outward to form a rectangle, selecting many parcels.</p>
+            <p>Look at the pop-up showing summary values and correlation statistics about your selected parcels.</p>
         </div>
-        
-        <div class="step">
-            <span class="step-number">3</span>
-            <p>A pop-up appears showing summary values - building and land values, lot sizes, and noise levels on average.</p>
-        </div>
-        
-        <div class="step">
-            <span class="step-number">4</span>
-            <p>Examine the graph plotting building value vs noise level (with lot size shown by the circle size).</p>
-        </div>
-        
-        <div class="step">
-            <span class="step-number">5</span>
-            <p>Look for patterns - is there a correlation between property values and noise levels in this neighborhood?</p>
-        </div>
-    </div>
-    
+
     <br>
     <button class="zoom-button" on:click={zoomToEastBoston}>
         🔍 Zoom to East Boston

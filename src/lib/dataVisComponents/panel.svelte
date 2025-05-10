@@ -9,6 +9,7 @@
     import Slide6 from "../../slides/Slide6.svelte";
     import Slide7 from "../../slides/Slide7.svelte";
     import SlideDummy from "../../slides/SlideDummy.svelte";
+    import Slide8 from "../../slides/Slide8.svelte";
 
     import { tick } from "svelte";
     import { onMount } from 'svelte';
@@ -63,6 +64,7 @@
             on:zoomTo={handleZoomTo} 
         />
         <Slide7 active={value === 7} bind:value={value}/>
+        <Slide8 active={value === 8} bind:value={value}/>
     </Scrolly>
 </div>
 
