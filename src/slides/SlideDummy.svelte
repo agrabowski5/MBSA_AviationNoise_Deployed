@@ -46,17 +46,17 @@
                 <tr>
                     <td><strong class="high-noise">High</strong></td>
                     <td>60-70 dB</td>
-                    <td>Normal conversation or busy restaurant</td>
+                    <td>Busy Restaurant</td>
                 </tr>
                 <tr>
                     <td><strong class="medium-high-noise">Medium-High</strong></td>
                     <td>55-60 dB</td>
-                    <td>Moderate rainfall or quiet office</td>
+                    <td>Moderate rainfall or Office</td>
                 </tr>
                 <tr>
                     <td><strong class="medium-noise">Medium</strong></td>
                     <td>50-55 dB</td>
-                    <td>Quiet suburb or refrigerator running</td>
+                    <td>Refrigerator running</td>
                 </tr>
                 <tr>
                     <td><strong class="low-medium-noise">Low-Medium</strong></td>
@@ -65,7 +65,7 @@
                 </tr>
             </tbody>
         </table>
-        <p class="note">Even moderate noise levels (45+ dB) can disrupt sleep and increase stress when experienced regularly, especially at night.</p>
+        <p class="note">Although these noise levels do not seem high, the constant interruption can interrupt resident's rest and concentration. Even moderate noise levels (45+ dB) can disrupt sleep and increase stress when experienced regularly, especially at night.</p>
     </div>
 </div>
 
