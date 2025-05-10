@@ -50,19 +50,18 @@
         <Slide1 active={value === 0} bind:value={value}/>
         <SlideDummy active={value === 1} bind:value={value}/>
         <Slide2 active={value === 2} bind:value={value}/>
-        <Slide3 active={value === 3} bind:value={value}/>
-        <Slide4 active={value === 4} bind:value={value}/>
+        <Slide4 active={value === 3} bind:value={value}/>
         <Slide5 
-            active={value === 5} 
+            active={value === 4} 
             bind:value={value} 
             on:zoomTo={handleZoomTo}
         />
         <Slide6 
-            active={value === 6} 
+            active={value === 5} 
             bind:value={value} 
             on:zoomTo={handleZoomTo} 
         />
-        <Slide7 active={value === 7} bind:value={value}/>
+        <Slide7 active={value === 6} bind:value={value}/>
     </Scrolly>
 </div>
 
